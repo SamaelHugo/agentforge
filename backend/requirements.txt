@@ -1,0 +1,13 @@
+# AgentForge backend dependencies
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+SQLAlchemy==2.0.36
+anthropic==0.109.1
+python-multipart==0.0.20
+pypdf==5.1.0
+numpy==2.2.1
+httpx==0.28.1
+# Postgres + pgvector path (optional; not used by the default SQLite setup)
+psycopg[binary]==3.2.3

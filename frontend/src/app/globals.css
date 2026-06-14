@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body {
+    background-color: #0a0a0a;
+    color: #f5f0eb;
+  }
+
+  body {
+    font-family: var(--font-jakarta), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* subtle radial glow + grain so the dark canvas never feels flat */
+    background-image:
+      radial-gradient(900px 600px at 78% -8%, rgba(34, 211, 238, 0.07), transparent 60%),
+      radial-gradient(800px 600px at 5% 105%, rgba(139, 92, 246, 0.06), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgba(34, 211, 238, 0.28);
+    color: #f5f0eb;
+  }
+
+  /* Thin, unobtrusive scrollbars */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.18);
+    background-clip: padding-box;
+  }
+}
+
+@layer components {
+  /* Core glassmorphism surface (TERRA-style: blur + saturate + top highlight) */
+  .glass {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 8px 32px rgba(0, 0, 0, 0.36);
+  }
+
+  .glass-soft {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(18px) saturate(1.1);
+    -webkit-backdrop-filter: blur(18px) saturate(1.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-input {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .glass-input:focus {
+    outline: none;
+    border-color: rgba(34, 211, 238, 0.55);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  /* 11px uppercase tracked micro-label (EKOS editorial detail) */
+  .micro-label {
+    font-size: 11px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #a8a29e;
+  }
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.08),
+      transparent
+    );
+    animation: shimmer 1.8s infinite;
+  }
+}
