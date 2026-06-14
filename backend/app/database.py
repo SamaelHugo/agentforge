@@ -10,13 +10,31 @@ from .config import get_settings
 
 settings = get_settings()
 
+
+def _normalize_db_url(url: str) -> str:
+    """Normalize managed-Postgres URLs to the psycopg (v3) driver.
+
+    Railway / Render / Supabase / Heroku hand out ``postgres://`` or
+    ``postgresql://`` URLs, which SQLAlchemy maps to the psycopg2 driver. We
+    ship psycopg v3, so rewrite the scheme. URLs that already pin a driver
+    (e.g. ``postgresql+psycopg://``) or use another backend are left untouched.
+    """
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg://" + url[len("postgres://") :]
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url[len("postgresql://") :]
+    return url
+
+
+DATABASE_URL = _normalize_db_url(settings.database_url)
+
 _connect_args: dict = {}
-if settings.database_url.startswith("sqlite"):
+if DATABASE_URL.startswith("sqlite"):
     # allow the SSE generator (runs in a worker thread) to reuse the session
     _connect_args = {"check_same_thread": False}
 
 engine = create_engine(
-    settings.database_url,
+    DATABASE_URL,
     connect_args=_connect_args,
     pool_pre_ping=True,
     future=True,
