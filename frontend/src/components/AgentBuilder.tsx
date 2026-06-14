@@ -19,13 +19,7 @@ import {
   Textarea,
 } from "@/components/ui";
 
-const MODELS = [
-  "claude-opus-4-8",
-  "claude-sonnet-4-6",
-  "claude-haiku-4-5",
-  "claude-opus-4-7",
-  "claude-fable-5",
-];
+const MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1"];
 
 export function AgentBuilder({ agent }: { agent?: Agent }) {
   const router = useRouter();

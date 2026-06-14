@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # --- LLM ---
     llm_provider: str = "auto"  # auto | anthropic | mock
     anthropic_api_key: str | None = None
-    default_model: str = "claude-opus-4-8"
+    default_model: str = "gpt-4o-mini"
     max_tokens: int = 4096
 
     # --- Embeddings ---
@@ -42,13 +42,20 @@ class Settings(BaseSettings):
     def resolved_llm_provider(self) -> str:
         if self.llm_provider != "auto":
             return self.llm_provider
-        return "anthropic" if self.anthropic_api_key else "mock"
+        if self.openai_api_key:
+            return "openai"
+        if self.anthropic_api_key:
+            return "anthropic"
+        return "mock"
 
     @property
     def resolved_embeddings_provider(self) -> str:
         if self.embeddings_provider != "auto":
             return self.embeddings_provider
-        return "openai" if self.openai_api_key else "local"
+        # Default to the free local embedder even when an OpenAI key is present
+        # (which it usually is, for the LLM). Opt into OpenAI embeddings
+        # explicitly with EMBEDDINGS_PROVIDER=openai.
+        return "local"
 
 
 @lru_cache

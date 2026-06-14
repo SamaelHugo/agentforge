@@ -19,7 +19,7 @@ The agent loop is a **custom ReAct engine written from scratch (~150 lines) — 
 - **Custom ReAct engine, no framework** — a transparent `prompt → LLM → tool call → result → repeat` loop you can read in one sitting (`backend/app/engine/react.py`).
 - **Real-time execution tracing** — the agent's reasoning streams to the UI via SSE: `thinking`, `tool_call`, `result`, `error`, colour-coded on a live timeline.
 - **RAG from scratch** — recursive text splitting, embeddings, and cosine vector search over per-agent document stores. Pluggable embedders (local hashing by default, OpenAI `text-embedding-3-small` optional).
-- **Pluggable LLM providers** — Anthropic Claude (adaptive thinking + tool use) or a deterministic offline mock; selected automatically from your environment.
+- **Pluggable LLM providers** — OpenAI (gpt-4o-mini by default) or Anthropic Claude, plus a deterministic offline mock; selected automatically from your environment.
 - **Tool use with real side effects** — `search_knowledge` (RAG), `draft_email`, `save_to_db` (persists artifacts), `web_search` (mock external integration).
 - **Polished, custom UI** — dark glassmorphism design, editorial typography, Framer Motion micro-interactions. Not a stock template.
 - **Three ready-to-demo agents** seeded on first run: Lead Qualifier, Support Agent, Research Assistant.
@@ -88,7 +88,7 @@ The agent loop is a **custom ReAct engine written from scratch (~150 lines) — 
 | Frontend | Next.js 15 · TypeScript · Tailwind CSS · Framer Motion · lucide-react |
 | Backend | Python · FastAPI · SQLAlchemy 2 · Server-Sent Events |
 | Database | SQLite (default) · PostgreSQL + pgvector (production) |
-| AI | Anthropic Claude API (adaptive thinking + tool use) · OpenAI embeddings (optional) |
+| AI | OpenAI (gpt-4o-mini) or Anthropic Claude · local or OpenAI embeddings |
 | Deploy | Vercel (frontend) · Railway / Render (backend) · Docker Compose (local full stack) |
 
 ---
@@ -138,10 +138,11 @@ All backend settings live in `backend/.env` (see `.env.example`). Highlights:
 
 | Variable | Default | Notes |
 | --- | --- | --- |
-| `LLM_PROVIDER` | `auto` | `auto` → Claude if `ANTHROPIC_API_KEY` set, else `mock`. |
-| `ANTHROPIC_API_KEY` | — | Enables live Claude reasoning. |
-| `DEFAULT_MODEL` | `claude-opus-4-8` | Switch to `claude-haiku-4-5` / `claude-sonnet-4-6` to cut cost. |
-| `EMBEDDINGS_PROVIDER` | `auto` | `auto` → OpenAI if `OPENAI_API_KEY` set, else local hashing embedder. |
+| `LLM_PROVIDER` | `auto` | `auto` → OpenAI if `OPENAI_API_KEY`, else Claude if `ANTHROPIC_API_KEY`, else `mock`. |
+| `OPENAI_API_KEY` | — | Enables OpenAI reasoning (default LLM). |
+| `ANTHROPIC_API_KEY` | — | Enables Claude reasoning (alternative). |
+| `DEFAULT_MODEL` | `gpt-4o-mini` | e.g. `gpt-4o`, `gpt-4.1-mini`, or a `claude-*` id when using Anthropic. |
+| `EMBEDDINGS_PROVIDER` | `auto` | Local hashing embedder by default; set `openai` for `text-embedding-3-small`. |
 | `DATABASE_URL` | `sqlite:///./agentforge.db` | Use a `postgresql+psycopg://…` URL for pgvector. |
 | `CHUNK_SIZE` / `CHUNK_OVERLAP` / `TOP_K` | `800` / `120` / `4` | RAG tuning. |
 
@@ -176,7 +177,7 @@ LIMIT :k;
 ## ☁️ Deploy
 
 - **Frontend → Vercel.** Import `frontend/`, set `NEXT_PUBLIC_API_URL` to your backend URL.
-- **Backend → Railway / Render.** Deploy `backend/` (Dockerfile included), set env vars, run `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Add `CORS_ORIGINS=https://your-frontend.vercel.app`.
+- **Backend → Render / Railway.** A [`render.yaml`](render.yaml) blueprint is included — on Render: **New → Blueprint → connect this repo** (auto-deploys on every push). Or deploy `backend/` (Dockerfile) on Railway. Set `OPENAI_API_KEY` and `CORS_ORIGINS`.
 - **Database → Railway Postgres / Supabase** (both support pgvector).
 
 ---
