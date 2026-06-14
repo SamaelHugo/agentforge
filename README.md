@@ -2,6 +2,8 @@
 
 **An AI agent platform — build agents, give them tools and knowledge, and watch them reason in real time.**
 
+**🔗 Live demo: [agentforge-eight.vercel.app](https://agentforge-eight.vercel.app)** — runs in offline mock mode (no signup); open it and hit **Playground**.
+
 AgentForge is a full-stack application where you create AI agents, configure their system prompt, tools, and a knowledge base, then run them in a split-view **Playground** that streams the agent's "thinking", tool calls, and results live as it works.
 
 The agent loop is a **custom ReAct engine written from scratch (~150 lines) — no LangChain** — so every step is observable, controllable, and cheap. It pairs a hand-built **RAG pipeline** (chunking → embeddings → vector search) with **real-time execution tracing** over Server-Sent Events.
