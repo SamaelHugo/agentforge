@@ -19,7 +19,7 @@ The agent loop is a **custom ReAct engine written from scratch (~150 lines) — 
 - **Custom ReAct engine, no framework** — a transparent `prompt → LLM → tool call → result → repeat` loop you can read in one sitting (`backend/app/engine/react.py`).
 - **Real-time execution tracing** — the agent's reasoning streams to the UI via SSE: `thinking`, `tool_call`, `result`, `error`, colour-coded on a live timeline.
 - **RAG from scratch** — recursive text splitting, embeddings, and cosine vector search over per-agent document stores. Pluggable embedders (local hashing by default, OpenAI `text-embedding-3-small` optional).
-- **Pluggable LLM providers** — OpenAI (gpt-4o-mini by default) or Anthropic Claude, plus a deterministic offline mock; selected automatically from your environment.
+- **Pluggable LLM providers** — any OpenAI-compatible endpoint: **Groq** (free Llama, no card), Gemini, OpenAI, or Anthropic Claude, plus a deterministic offline mock; selected automatically from your environment.
 - **Tool use with real side effects** — `search_knowledge` (RAG), `draft_email`, `save_to_db` (persists artifacts), `web_search` (mock external integration).
 - **Polished, custom UI** — dark glassmorphism design, editorial typography, Framer Motion micro-interactions. Not a stock template.
 - **Three ready-to-demo agents** seeded on first run: Lead Qualifier, Support Agent, Research Assistant.
@@ -88,7 +88,7 @@ The agent loop is a **custom ReAct engine written from scratch (~150 lines) — 
 | Frontend | Next.js 15 · TypeScript · Tailwind CSS · Framer Motion · lucide-react |
 | Backend | Python · FastAPI · SQLAlchemy 2 · Server-Sent Events |
 | Database | SQLite (default) · PostgreSQL + pgvector (production) |
-| AI | OpenAI (gpt-4o-mini) or Anthropic Claude · local or OpenAI embeddings |
+| AI | OpenAI-compatible LLMs — Groq (free Llama) / Gemini / OpenAI / Anthropic Claude · local or OpenAI embeddings |
 | Deploy | Vercel (frontend) · Railway / Render (backend) · Docker Compose (local full stack) |
 
 ---
@@ -138,10 +138,11 @@ All backend settings live in `backend/.env` (see `.env.example`). Highlights:
 
 | Variable | Default | Notes |
 | --- | --- | --- |
-| `LLM_PROVIDER` | `auto` | `auto` → OpenAI if `OPENAI_API_KEY`, else Claude if `ANTHROPIC_API_KEY`, else `mock`. |
-| `OPENAI_API_KEY` | — | Enables OpenAI reasoning (default LLM). |
-| `ANTHROPIC_API_KEY` | — | Enables Claude reasoning (alternative). |
-| `DEFAULT_MODEL` | `gpt-4o-mini` | e.g. `gpt-4o`, `gpt-4.1-mini`, or a `claude-*` id when using Anthropic. |
+| `LLM_PROVIDER` | `auto` | `auto` picks the first key set: Groq → Gemini → OpenAI → Anthropic → `mock`. |
+| `GROQ_API_KEY` | — | **Free**, OpenAI-compatible (Llama) — [console.groq.com](https://console.groq.com), no card. |
+| `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | — | Other providers (Gemini free tier; OpenAI/Claude paid). |
+| `DEFAULT_MODEL` | `gpt-4o-mini` | Match the provider, e.g. `llama-3.3-70b-versatile` (Groq), `gemini-2.0-flash`, `claude-*`. |
+| `RATE_LIMIT_PER_MIN` | `10` | Per-IP cap on agent runs (public-demo abuse guard; `0` disables). |
 | `EMBEDDINGS_PROVIDER` | `auto` | Local hashing embedder by default; set `openai` for `text-embedding-3-small`. |
 | `DATABASE_URL` | `sqlite:///./agentforge.db` | Use a `postgresql+psycopg://…` URL for pgvector. |
 | `CHUNK_SIZE` / `CHUNK_OVERLAP` / `TOP_K` | `800` / `120` / `4` | RAG tuning. |

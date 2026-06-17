@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from ..database import SessionLocal, get_db
 from ..engine import ReActEngine, events
 from ..models import Agent, Run, RunStep
+from ..ratelimit import rate_limit
 from ..schemas import ChatRequest, RunDetail, RunOut, RunStepOut
 from ..tools import ToolContext
 
@@ -28,7 +29,12 @@ def _sse(event: dict) -> str:
 
 
 @router.post("/agents/{agent_id}/runs")
-def stream_run(agent_id: str, body: ChatRequest, db: Session = Depends(get_db)) -> StreamingResponse:
+def stream_run(
+    agent_id: str,
+    body: ChatRequest,
+    db: Session = Depends(get_db),
+    _rl: None = Depends(rate_limit),
+) -> StreamingResponse:
     agent = db.get(Agent, agent_id)
     if agent is None:
         raise HTTPException(status_code=404, detail="Agent not found")

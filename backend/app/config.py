@@ -15,7 +15,9 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./agentforge.db"
 
     # --- LLM ---
-    llm_provider: str = "auto"  # auto | anthropic | mock
+    llm_provider: str = "auto"  # auto | groq | gemini | openai | anthropic | mock
+    groq_api_key: str | None = None
+    gemini_api_key: str | None = None
     anthropic_api_key: str | None = None
     default_model: str = "gpt-4o-mini"
     max_tokens: int = 4096
@@ -33,6 +35,7 @@ class Settings(BaseSettings):
     # --- App ---
     cors_origins: str = "http://localhost:3000"
     seed_on_startup: bool = True
+    rate_limit_per_min: int = 10  # per-IP cap on agent runs (0 disables)
 
     @property
     def cors_origin_list(self) -> list[str]:
@@ -42,6 +45,10 @@ class Settings(BaseSettings):
     def resolved_llm_provider(self) -> str:
         if self.llm_provider != "auto":
             return self.llm_provider
+        if self.groq_api_key:
+            return "groq"
+        if self.gemini_api_key:
+            return "gemini"
         if self.openai_api_key:
             return "openai"
         if self.anthropic_api_key:

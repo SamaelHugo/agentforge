@@ -19,7 +19,12 @@ import {
   Textarea,
 } from "@/components/ui";
 
-const MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1"];
+const MODELS = [
+  "llama-3.3-70b-versatile",
+  "llama-3.1-8b-instant",
+  "gemma2-9b-it",
+  "gemini-2.0-flash",
+];
 
 export function AgentBuilder({ agent }: { agent?: Agent }) {
   const router = useRouter();

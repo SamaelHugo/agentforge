@@ -1,8 +1,9 @@
-"""OpenAI Chat Completions provider (default: gpt-4o-mini).
+"""OpenAI-compatible Chat Completions provider.
 
-The engine speaks an Anthropic-style message format; this provider translates
-to/from the OpenAI Chat Completions shape and back, so it's a drop-in
-alternative to the Claude provider. Uses raw HTTP (httpx) — no extra SDK.
+Works against any OpenAI-compatible endpoint by varying ``base_url`` — used here
+for OpenAI, **Groq** (free Llama models), and Gemini's OpenAI-compatible API.
+Speaks the engine's Anthropic-style message format by translating to/from the
+OpenAI shape. Raw HTTP (httpx), no extra SDK.
 """
 from __future__ import annotations
 
@@ -13,8 +14,19 @@ import httpx
 
 from .base import LLMResult, ToolCall
 
-_URL = "https://api.openai.com/v1/chat/completions"
-_OPENAI_PREFIXES = ("gpt-", "o1", "o3", "o4", "chatgpt")
+OPENAI_PREFIXES = ("gpt-", "o1", "o3", "o4", "chatgpt")
+GROQ_PREFIXES = (
+    "llama",
+    "mixtral",
+    "gemma",
+    "deepseek",
+    "qwen",
+    "kimi",
+    "moonshot",
+    "gpt-oss",
+    "openai/",
+)
+GEMINI_PREFIXES = ("gemini", "gemma")
 
 
 def _stringify(content: Any) -> str:
@@ -108,11 +120,22 @@ def to_openai_tools(tools: list[dict]) -> list[dict]:
 
 
 class OpenAIProvider:
-    name = "openai"
+    """Generic OpenAI-compatible provider (OpenAI / Groq / Gemini / …)."""
 
-    def __init__(self, api_key: str, default_model: str = "gpt-4o-mini") -> None:
+    def __init__(
+        self,
+        api_key: str,
+        *,
+        base_url: str = "https://api.openai.com/v1",
+        default_model: str = "gpt-4o-mini",
+        name: str = "openai",
+        model_prefixes: tuple[str, ...] = OPENAI_PREFIXES,
+    ) -> None:
+        self.name = name
         self._api_key = api_key
+        self._url = base_url.rstrip("/") + "/chat/completions"
         self._default_model = default_model
+        self._prefixes = tuple(p.lower() for p in model_prefixes)
 
     def complete(
         self,
@@ -124,10 +147,11 @@ class OpenAIProvider:
         max_tokens: int,
         effort: str | None = None,
     ) -> LLMResult:
-        # Guard against a non-OpenAI model id sneaking in (e.g. a seeded
-        # "claude-*" value) — fall back to the configured default.
+        # Use the agent's model only if it belongs to this endpoint's family,
+        # otherwise fall back to the configured default (e.g. a seeded "gpt-*"
+        # value when the active endpoint is Groq).
         use_model = (
-            model if model and model.lower().startswith(_OPENAI_PREFIXES) else self._default_model
+            model if (model and model.lower().startswith(self._prefixes)) else self._default_model
         )
         body: dict[str, Any] = {
             "model": use_model,
@@ -139,7 +163,7 @@ class OpenAIProvider:
             body["tool_choice"] = "auto"
 
         resp = httpx.post(
-            _URL,
+            self._url,
             headers={"Authorization": f"Bearer {self._api_key}"},
             json=body,
             timeout=120.0,
