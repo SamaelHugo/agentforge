@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 function CodeBlock({ children }: { children: string }) {
   return (
-    <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-white/8 bg-black/30 p-3 font-mono text-[12px] leading-relaxed text-ink-muted">
+    <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-line-soft bg-bg p-3 font-mono text-[12px] leading-relaxed text-ink-muted">
       {children}
     </pre>
   );
@@ -44,7 +44,7 @@ function StepShell({
         >
           {icon}
         </span>
-        {!last && <span className="mt-1 w-px flex-1 bg-white/10" />}
+        {!last && <span className="mt-1 w-px flex-1 bg-line" />}
       </div>
       <div className="min-w-0 flex-1 pb-5">
         <p className={cn("mb-1 text-[11px] font-semibold uppercase tracking-[0.18em]", labelClass)}>
@@ -63,7 +63,7 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
     return (
       <StepShell
         last={last}
-        dotClass="bg-white/[0.06] text-ink-muted"
+        dotClass="bg-surface-raised text-ink-muted"
         icon={<Brain size={13} />}
         label="Thinking"
         labelClass="text-ink-faint"
@@ -115,7 +115,7 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
             {data.hits.map((hit: any, i: number) => (
               <div
                 key={i}
-                className="rounded-lg border border-accent-cyan/20 bg-accent-cyan/[0.04] p-2.5"
+                className="rounded-lg border border-accent-cyan/20 bg-accent-cyan/10 p-2.5"
               >
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 truncate text-xs text-accent-cyan">
@@ -137,7 +137,7 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
             {data.results.map((r: any, i: number) => (
               <div
                 key={i}
-                className="rounded-lg border border-accent-amber/20 bg-accent-amber/[0.04] p-2.5"
+                className="rounded-lg border border-accent-amber/20 bg-accent-amber/10 p-2.5"
               >
                 <p className="text-[13px] font-medium text-ink">{r.title}</p>
                 <p className="truncate text-[11px] text-accent-amber">{r.url}</p>

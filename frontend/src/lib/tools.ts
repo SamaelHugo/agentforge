@@ -63,44 +63,41 @@ export function toolMeta(name: string): ToolMeta {
   );
 }
 
-/** Static accent → Tailwind class sets (kept literal so JIT picks them up). */
+/** Static accent → Tailwind class sets (kept literal so JIT picks them up).
+ *  Raycast pairs every semantic colour with a ~15%-alpha soft fill and uses
+ *  no glow whatsoever — the colour itself is the signal. */
 export const ACCENT: Record<
   Accent,
-  { text: string; bg: string; border: string; dot: string; glow: string }
+  { text: string; bg: string; border: string; dot: string }
 > = {
   cyan: {
     text: "text-accent-cyan",
-    bg: "bg-accent-cyan/10",
-    border: "border-accent-cyan/30",
+    bg: "bg-accent-cyan/15",
+    border: "border-accent-cyan/25",
     dot: "bg-accent-cyan",
-    glow: "shadow-[0_0_10px_rgba(34,211,238,0.7)]",
   },
   violet: {
     text: "text-accent-violet",
-    bg: "bg-accent-violet/10",
-    border: "border-accent-violet/30",
+    bg: "bg-accent-violet/15",
+    border: "border-accent-violet/25",
     dot: "bg-accent-violet",
-    glow: "shadow-[0_0_10px_rgba(139,92,246,0.7)]",
   },
   green: {
     text: "text-accent-green",
-    bg: "bg-accent-green/10",
-    border: "border-accent-green/30",
+    bg: "bg-accent-green/15",
+    border: "border-accent-green/25",
     dot: "bg-accent-green",
-    glow: "shadow-[0_0_10px_rgba(74,222,128,0.7)]",
   },
   amber: {
     text: "text-accent-amber",
-    bg: "bg-accent-amber/10",
-    border: "border-accent-amber/30",
+    bg: "bg-accent-amber/15",
+    border: "border-accent-amber/25",
     dot: "bg-accent-amber",
-    glow: "shadow-[0_0_10px_rgba(251,191,36,0.7)]",
   },
   red: {
     text: "text-accent-red",
-    bg: "bg-accent-red/10",
-    border: "border-accent-red/30",
+    bg: "bg-accent-red/15",
+    border: "border-accent-red/25",
     dot: "bg-accent-red",
-    glow: "shadow-[0_0_10px_rgba(248,113,113,0.7)]",
   },
 };

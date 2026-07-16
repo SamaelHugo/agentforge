@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
-import { Fraunces, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 
 import { Sidebar } from "@/components/Sidebar";
 import "./globals.css";
 
-const fraunces = Fraunces({
+/* Raycast is a single-typeface system: one neutral grotesk everywhere,
+   a mono reserved for code, IDs and the execution trace. No serif. */
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-fraunces",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-inter",
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
@@ -37,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${fraunces.variable} ${jakarta.variable} ${mono.variable} font-sans antialiased`}
+        className={`${inter.variable} ${mono.variable} font-sans antialiased`}
       >
         <div className="flex min-h-screen">
           <Sidebar />

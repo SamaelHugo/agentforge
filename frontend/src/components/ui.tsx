@@ -55,16 +55,15 @@ export function PageHeader({
 }
 
 // ── Button ────────────────────────────────────────────────────────────────
-type Variant = "primary" | "glass" | "ghost" | "danger";
+type Variant = "primary" | "surface" | "ghost" | "danger";
 type Size = "sm" | "md";
 
 const VARIANTS: Record<Variant, string> = {
-  primary:
-    "bg-accent-cyan/15 text-accent-cyan ring-1 ring-inset ring-accent-cyan/40 hover:bg-accent-cyan/25",
-  glass: "glass text-ink hover:bg-white/[0.09]",
-  ghost: "text-ink-muted hover:bg-white/[0.05] hover:text-ink",
-  danger:
-    "bg-accent-red/10 text-accent-red ring-1 ring-inset ring-accent-red/30 hover:bg-accent-red/20",
+  // Raycast's primary action is plain white — brand red stays a signal, never a CTA.
+  primary: "bg-white text-bg hover:bg-white/90",
+  surface: "surface text-ink hover:bg-surface-raised",
+  ghost: "text-ink-muted hover:bg-surface-raised hover:text-ink",
+  danger: "border border-accent-red/25 bg-accent-red/15 text-accent-red hover:bg-accent-red/25",
 };
 
 const SIZES: Record<Size, string> = {
@@ -73,7 +72,7 @@ const SIZES: Record<Size, string> = {
 };
 
 export function Button({
-  variant = "glass",
+  variant = "surface",
   size = "md",
   loading,
   className,
@@ -87,7 +86,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50",
         VARIANTS[variant],
         SIZES[size],
         className,
@@ -103,7 +102,7 @@ export function Button({
 
 export function LinkButton({
   href,
-  variant = "glass",
+  variant = "surface",
   size = "md",
   className,
   children,
@@ -118,7 +117,7 @@ export function LinkButton({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all",
+        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all",
         VARIANTS[variant],
         SIZES[size],
         className,
@@ -152,7 +151,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "glass-input w-full rounded-xl px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint",
+        "field w-full rounded-lg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint",
         className,
       )}
       {...props}
@@ -167,7 +166,7 @@ export function Textarea({
   return (
     <textarea
       className={cn(
-        "glass-input w-full rounded-xl px-3.5 py-2.5 text-sm leading-relaxed text-ink placeholder:text-ink-faint",
+        "field w-full rounded-lg px-3.5 py-2.5 text-sm leading-relaxed text-ink placeholder:text-ink-faint",
         className,
       )}
       {...props}
@@ -183,7 +182,7 @@ export function Select({
   return (
     <select
       className={cn(
-        "glass-input w-full rounded-xl px-3.5 py-2.5 text-sm text-ink",
+        "field w-full rounded-lg px-3.5 py-2.5 text-sm text-ink",
         className,
       )}
       {...props}
@@ -232,7 +231,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-ink-muted",
+        "inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs text-ink-muted",
         className,
       )}
     >
@@ -261,8 +260,8 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="glass-soft flex flex-col items-center justify-center rounded-glass px-8 py-16 text-center">
-      <span className="mb-4 grid h-12 w-12 place-items-center rounded-full bg-white/[0.05] text-ink-muted">
+    <div className="surface-soft flex flex-col items-center justify-center rounded-card px-8 py-16 text-center">
+      <span className="mb-4 grid h-12 w-12 place-items-center rounded-full bg-surface-raised text-ink-muted">
         <Icon size={22} />
       </span>
       <h3 className="font-display text-lg font-medium text-ink">{title}</h3>

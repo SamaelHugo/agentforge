@@ -67,7 +67,7 @@ export function AgentPicker({ basePath }: { basePath: string }) {
         >
           <Link
             href={`${basePath}/${agent.id}`}
-            className="glass group flex h-full flex-col rounded-t-glass rounded-b-xl p-5 transition-all hover:bg-white/[0.09]"
+            className="surface group flex h-full flex-col rounded-t-card rounded-b-xl p-5 transition-all hover:bg-surface-raised"
           >
             <div className="mb-2 flex items-center justify-between">
               <span className="flex items-center gap-2">

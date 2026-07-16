@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+   Raycast design language.
+   Hard rule: no backdrop-filter, no blur, no glow, no drop shadows.
+   Depth is built from the surface ladder and 1px hairlines only.
+   ───────────────────────────────────────────────────────────── */
+
 @layer base {
   :root {
     color-scheme: dark;
@@ -9,27 +15,22 @@
 
   html,
   body {
-    background-color: #0a0a0a;
-    color: #f5f0eb;
+    background-color: #07080a;
+    color: #f2f2f3;
   }
 
   body {
-    font-family: var(--font-jakarta), system-ui, sans-serif;
+    font-family: var(--font-inter), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    /* subtle radial glow + grain so the dark canvas never feels flat */
-    background-image:
-      radial-gradient(900px 600px at 78% -8%, rgba(34, 211, 238, 0.07), transparent 60%),
-      radial-gradient(800px 600px at 5% 105%, rgba(139, 92, 246, 0.06), transparent 60%);
-    background-attachment: fixed;
+    /* Flat canvas — Raycast builds depth with surfaces, not ambient light. */
   }
 
   ::selection {
-    background: rgba(34, 211, 238, 0.28);
-    color: #f5f0eb;
+    background: rgba(87, 193, 255, 0.26);
+    color: #f2f2f3;
   }
 
-  /* Thin, unobtrusive scrollbars */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -38,60 +39,64 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: #242728;
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: #34383a;
     background-clip: padding-box;
   }
 }
 
 @layer components {
-  /* Core glassmorphism surface (TERRA-style: blur + saturate + top highlight) */
-  .glass {
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(24px) saturate(1.2);
-    -webkit-backdrop-filter: blur(24px) saturate(1.2);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 8px 32px rgba(0, 0, 0, 0.36);
+  /* Panel / card. The 1px top highlight is Raycast's keycap trick —
+     the only gradient allowed in the entire system. */
+  .surface {
+    background: #0d0d0f;
+    border: 1px solid #242728;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
-  .glass-soft {
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(18px) saturate(1.1);
-    -webkit-backdrop-filter: blur(18px) saturate(1.1);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+  /* Nested or secondary surface — softer edge so nesting reads. */
+  .surface-soft {
+    background: #0d0d0f;
+    border: 1px solid #1a1c1d;
   }
 
-  .glass-input {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    transition: border-color 0.2s ease, background 0.2s ease;
+  /* Raised/hover step of the ladder. */
+  .surface-raised {
+    background: #121214;
+    border: 1px solid #242728;
   }
-  .glass-input:focus {
+
+  .field {
+    background: #0d0d0f;
+    border: 1px solid #242728;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .field:focus,
+  .field:focus-within {
     outline: none;
-    border-color: rgba(34, 211, 238, 0.55);
-    background: rgba(255, 255, 255, 0.06);
+    border-color: #57c1ff;
+    background: #121214;
   }
 
-  /* 11px uppercase tracked micro-label (EKOS editorial detail) */
+  /* 11px uppercase tracked micro-label */
   .micro-label {
     font-size: 11px;
     line-height: 1;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: #a8a29e;
+    letter-spacing: 0.14em;
+    color: #5f6266;
   }
 
   .skeleton {
     position: relative;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
+    background: #0d0d0f;
+    border: 1px solid #1a1c1d;
   }
   .skeleton::after {
     content: "";
@@ -101,9 +106,27 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.05),
       transparent
     );
     animation: shimmer 1.8s infinite;
+  }
+}
+
+/* Keyboard focus is first-class in Raycast — never remove the ring. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid #57c1ff;
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

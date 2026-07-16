@@ -128,10 +128,10 @@ export default function PlaygroundPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex items-center gap-4 border-b border-white/10 px-8 py-4">
+      <header className="flex items-center gap-4 border-b border-line px-8 py-4">
         <Link
           href="/playground"
-          className="grid h-9 w-9 place-items-center rounded-xl text-ink-muted transition-colors hover:bg-white/5 hover:text-ink"
+          className="grid h-9 w-9 place-items-center rounded-xl text-ink-muted transition-colors hover:bg-surface-raised hover:text-ink"
         >
           <ArrowLeft size={18} />
         </Link>
@@ -150,7 +150,7 @@ export default function PlaygroundPage() {
         </div>
         <Link
           href={`/agents/${agent.id}`}
-          className="grid h-9 w-9 place-items-center rounded-xl text-ink-muted transition-colors hover:bg-white/5 hover:text-ink"
+          className="grid h-9 w-9 place-items-center rounded-xl text-ink-muted transition-colors hover:bg-surface-raised hover:text-ink"
         >
           <Settings2 size={18} />
         </Link>

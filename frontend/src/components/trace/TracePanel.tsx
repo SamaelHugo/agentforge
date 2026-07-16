@@ -28,7 +28,7 @@ const STATUS_LABEL: Record<Status, string> = {
 
 const STATUS_DOT: Record<Status, string> = {
   idle: "bg-ink-faint",
-  running: "bg-accent-cyan animate-pulse-glow",
+  running: "bg-accent-cyan animate-pulse-soft",
   completed: "bg-accent-green",
   error: "bg-accent-red",
 };
@@ -50,8 +50,8 @@ export function TracePanel({
   }, [steps.length]);
 
   return (
-    <div className={cn("glass flex h-full flex-col rounded-glass", className)}>
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+    <div className={cn("surface flex h-full min-h-0 flex-col rounded-card", className)}>
+      <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <div className="flex items-center gap-2">
           <BrainCircuit size={16} className="text-accent-cyan" />
           <h2 className="font-display text-base font-semibold text-ink">
@@ -64,7 +64,7 @@ export function TracePanel({
         </span>
       </div>
 
-      <div className="flex items-center gap-4 border-b border-white/8 px-5 py-2.5">
+      <div className="flex items-center gap-4 border-b border-line-soft px-5 py-2.5">
         {LEGEND.map((l) => (
           <span key={l.label} className="flex items-center gap-1.5 text-[11px] text-ink-faint">
             <span className={cn("h-1.5 w-1.5 rounded-full", l.className)} />

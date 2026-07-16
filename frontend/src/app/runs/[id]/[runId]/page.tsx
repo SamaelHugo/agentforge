@@ -59,19 +59,19 @@ export default function RunReplayPage() {
                 </div>
               </div>
               {run.status === "error" ? (
-                <div className="glass-soft rounded-2xl px-4 py-3 text-sm text-accent-red">
+                <div className="surface-soft rounded-2xl px-4 py-3 text-sm text-accent-red">
                   {run.error || "Run failed."}
                 </div>
               ) : (
-                <div className="glass-soft whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed text-ink">
+                <div className="surface-soft whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed text-ink">
                   {run.output || "—"}
                 </div>
               )}
             </div>
 
             {/* trace */}
-            <div className="glass rounded-glass p-5">
-              <div className="mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
+            <div className="surface rounded-card p-5">
+              <div className="mb-4 flex items-center gap-2 border-b border-line pb-3">
                 <BrainCircuit size={16} className="text-accent-cyan" />
                 <h2 className="font-display text-base font-semibold text-ink">
                   Reasoning steps

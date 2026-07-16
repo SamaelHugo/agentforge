@@ -93,14 +93,14 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
           <Upload size={15} />
           Upload file
         </Button>
-        <Button variant="glass" onClick={() => setShowText((s) => !s)}>
+        <Button variant="surface" onClick={() => setShowText((s) => !s)}>
           {showText ? <X size={15} /> : <Plus size={15} />}
           {showText ? "Cancel" : "Paste text"}
         </Button>
       </div>
 
       {showText && (
-        <div className="glass space-y-4 rounded-glass p-5">
+        <div className="surface space-y-4 rounded-card p-5">
           <Field label="Title">
             <Input
               value={filename}
@@ -140,7 +140,7 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
           {docs.map((doc) => (
             <div
               key={doc.id}
-              className="glass flex items-center gap-4 rounded-xl px-5 py-4"
+              className="surface flex items-center gap-4 rounded-xl px-5 py-4"
             >
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent-cyan/10 text-accent-cyan">
                 <FileText size={18} />

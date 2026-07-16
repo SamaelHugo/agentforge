@@ -26,7 +26,7 @@ function formatInline(text: string): ReactNode[] {
       nodes.push(<strong key={key++} className="font-semibold text-ink">{token.slice(2, -2)}</strong>);
     } else if (token.startsWith("`")) {
       nodes.push(
-        <code key={key++} className="rounded bg-white/10 px-1 py-0.5 font-mono text-[0.85em]">
+        <code key={key++} className="rounded bg-surface-raised px-1 py-0.5 font-mono text-[0.85em]">
           {token.slice(1, -1)}
         </code>,
       );
@@ -71,7 +71,7 @@ function TypingDots() {
         <span
           key={i}
           className="h-1.5 w-1.5 rounded-full bg-ink-muted"
-          style={{ animation: `pulse-glow 1.2s ease-in-out ${i * 0.18}s infinite` }}
+          style={{ animation: `pulse-soft 1.2s ease-in-out ${i * 0.18}s infinite` }}
         />
       ))}
     </span>
@@ -106,7 +106,7 @@ export function ChatPanel({
   const showThinking = running && messages[messages.length - 1]?.role === "user";
 
   return (
-    <div className="glass flex h-full flex-col rounded-glass">
+    <div className="surface flex h-full min-h-0 flex-col rounded-card">
       <div className="flex-1 space-y-5 overflow-auto px-6 py-6">
         {messages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center text-center">
@@ -124,7 +124,7 @@ export function ChatPanel({
                     key={s}
                     onClick={() => onSend(s)}
                     disabled={running}
-                    className="glass-soft rounded-xl px-4 py-2.5 text-left text-sm text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
+                    className="surface-soft rounded-xl px-4 py-2.5 text-left text-sm text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
                   >
                     {s}
                   </button>
@@ -148,8 +148,8 @@ export function ChatPanel({
                 m.role === "user"
                   ? "bg-accent-cyan/15 text-ink ring-1 ring-inset ring-accent-cyan/25"
                   : m.error
-                    ? "glass-soft text-accent-red"
-                    : "glass-soft text-ink",
+                    ? "surface-soft text-accent-red"
+                    : "surface-soft text-ink",
               )}
             >
               <MessageBody text={m.text} />
@@ -159,7 +159,7 @@ export function ChatPanel({
 
         {showThinking && (
           <div className="flex justify-start">
-            <div className="glass-soft rounded-2xl px-4 py-3">
+            <div className="surface-soft rounded-2xl px-4 py-3">
               <TypingDots />
             </div>
           </div>
@@ -167,8 +167,8 @@ export function ChatPanel({
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-white/10 p-4">
-        <div className="glass-input flex items-end gap-2 rounded-2xl p-2">
+      <div className="border-t border-line p-4">
+        <div className="field flex items-end gap-2 rounded-2xl p-2">
           <textarea
             value={value}
             onChange={(e) => setValue(e.target.value)}
@@ -185,7 +185,7 @@ export function ChatPanel({
           <button
             onClick={submit}
             disabled={running || !value.trim()}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent-cyan/20 text-accent-cyan ring-1 ring-inset ring-accent-cyan/40 transition-all hover:bg-accent-cyan/30 disabled:opacity-40"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-bg transition-all hover:bg-white/90 disabled:opacity-40"
           >
             <ArrowUp size={17} />
           </button>

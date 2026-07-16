@@ -72,7 +72,7 @@ export default function RunHistoryPage() {
             <Link
               key={run.id}
               href={`/runs/${id}/${run.id}`}
-              className="glass group flex items-center gap-4 rounded-xl px-5 py-4 transition-all hover:bg-white/[0.09]"
+              className="surface group flex items-center gap-4 rounded-xl px-5 py-4 transition-all hover:bg-surface-raised"
             >
               <StatusDot status={run.status} />
               <div className="min-w-0 flex-1">

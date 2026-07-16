@@ -16,7 +16,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -4 }}
-      className="glass group flex flex-col rounded-t-glass rounded-b-xl p-5"
+      className="surface group flex flex-col rounded-t-card rounded-b-xl p-5"
     >
       <div className="mb-3 flex items-center justify-between">
         <span className="flex items-center gap-2">
@@ -43,7 +43,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
         </div>
       )}
 
-      <div className="mt-5 flex items-center gap-4 border-t border-white/8 pt-4 text-xs text-ink-muted">
+      <div className="mt-5 flex items-center gap-4 border-t border-line-soft pt-4 text-xs text-ink-muted">
         <span className="flex items-center gap-1.5">
           <MessageSquare size={13} className="text-ink-faint" />
           {agent.run_count} {agent.run_count === 1 ? "run" : "runs"}
@@ -65,7 +65,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
           <Play size={14} />
           Playground
         </LinkButton>
-        <LinkButton href={`/agents/${agent.id}`} variant="glass" size="sm">
+        <LinkButton href={`/agents/${agent.id}`} variant="surface" size="sm">
           <Pencil size={14} />
           Edit
         </LinkButton>

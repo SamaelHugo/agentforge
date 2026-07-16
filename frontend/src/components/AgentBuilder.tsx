@@ -170,13 +170,13 @@ export function AgentBuilder({ agent }: { agent?: Agent }) {
                     "flex items-start gap-3 rounded-xl border p-4 text-left transition-all",
                     selected
                       ? cn(accent.bg, accent.border)
-                      : "border-white/8 bg-white/[0.02] hover:bg-white/[0.04]",
+                      : "border-line-soft bg-surface hover:bg-surface-raised",
                   )}
                 >
                   <span
                     className={cn(
                       "mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg",
-                      selected ? cn(accent.bg, accent.text) : "bg-white/[0.05] text-ink-faint",
+                      selected ? cn(accent.bg, accent.text) : "bg-surface-raised text-ink-faint",
                     )}
                   >
                     <Icon size={16} />
@@ -199,7 +199,7 @@ export function AgentBuilder({ agent }: { agent?: Agent }) {
                       "ml-auto grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-all",
                       selected
                         ? cn(accent.dot, "border-transparent text-bg")
-                        : "border-white/15",
+                        : "border-line",
                     )}
                   >
                     {selected && <Check size={12} className="text-bg" />}
@@ -243,12 +243,12 @@ export function AgentBuilder({ agent }: { agent?: Agent }) {
         {/* Edit-only: quick links + danger zone */}
         {isEdit && agent && (
           <>
-            <section className="flex flex-wrap gap-3 border-t border-white/8 pt-6">
+            <section className="flex flex-wrap gap-3 border-t border-line-soft pt-6">
               <LinkButton href={`/playground/${agent.id}`} variant="primary">
                 <Play size={15} />
                 Open in Playground
               </LinkButton>
-              <LinkButton href={`/knowledge/${agent.id}`} variant="glass">
+              <LinkButton href={`/knowledge/${agent.id}`} variant="surface">
                 <FileText size={15} />
                 Knowledge Base ({agent.document_count})
               </LinkButton>
