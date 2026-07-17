@@ -10,6 +10,8 @@ from __future__ import annotations
 import json
 import logging
 import time
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
@@ -23,6 +25,8 @@ logger = logging.getLogger("agentforge.llm")
 _MAX_RETRIES = 3
 # Resamples when the model writes a tool call the provider can't parse.
 _MAX_TOOL_RETRIES = 3
+# Longest we'll block a request waiting out a burst limit.
+_MAX_RETRY_WAIT = 10.0
 
 OPENAI_PREFIXES = ("gpt-", "o1", "o3", "o4", "chatgpt")
 GROQ_PREFIXES = (
@@ -37,6 +41,40 @@ GROQ_PREFIXES = (
     "openai/",
 )
 GEMINI_PREFIXES = ("gemini", "gemma")
+
+
+def _retry_after_seconds(resp: httpx.Response) -> float | None:
+    """Seconds from a Retry-After header, or None when absent/unparseable.
+
+    RFC 9110 allows either a delay in seconds or an HTTP date; providers use
+    both, so handle each.
+    """
+    raw = resp.headers.get("retry-after")
+    if not raw:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        pass
+    try:
+        when = parsedate_to_datetime(raw)
+    except (TypeError, ValueError):
+        return None
+    if when is None:
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    return max(0.0, (when - datetime.now(timezone.utc)).total_seconds())
+
+
+def _humanise(seconds: float) -> str:
+    if seconds < 90:
+        return f"{int(seconds)} seconds"
+    minutes = round(seconds / 60)
+    if minutes < 60:
+        return f"{minutes} minutes"
+    hours = seconds / 3600
+    return f"{hours:.1f} hours"
 
 
 def _stringify(content: Any) -> str:
@@ -174,11 +212,31 @@ class OpenAIProvider:
                 timeout=120.0,
             )
 
-            # --- free-tier rate limit: wait it out -------------------------
+            # --- rate limited ---------------------------------------------
             if resp.status_code == 429:
+                retry_after = _retry_after_seconds(resp)
+
+                # Two very different limits arrive as the same 429. A burst
+                # limit (tokens *per minute*) clears in seconds and is worth
+                # waiting out. A long-window quota (Groq's free tier bills
+                # 100k tokens *per day*) answers Retry-After in the tens of
+                # minutes — no number of short retries will clear it, so stop
+                # immediately and tell the user the real wait instead of
+                # burning 30s to report "wait a few seconds".
+                if retry_after is not None and retry_after > _MAX_RETRY_WAIT:
+                    logger.warning(
+                        "%s quota exhausted (retry-after=%.0fs): %s",
+                        self.name,
+                        retry_after,
+                        resp.text[:400],
+                    )
+                    raise RateLimitedError(
+                        f"{self.name}'s free tier is out of quota right now — "
+                        f"try again in about {_humanise(retry_after)}."
+                    )
+
                 rate_limited += 1
-                wait = float(resp.headers.get("retry-after") or (2 * rate_limited))
-                wait = min(wait, 10.0)
+                wait = min(retry_after or (2 * rate_limited), _MAX_RETRY_WAIT)
                 logger.warning(
                     "%s rate-limited (429); retry %d/%d in %.1fs",
                     self.name,
