@@ -23,7 +23,7 @@ from typing import Any
 
 from ..config import get_settings
 from ..llm import LLMProvider, get_llm_provider
-from ..llm.base import RateLimitedError
+from ..llm.base import RateLimitedError, ToolCallFormatError
 from ..tools import ToolContext, ToolResult, build_tool_schemas, get_tool
 from . import events
 
@@ -74,9 +74,10 @@ class ReActEngine:
                     max_tokens=max_tokens,
                     effort=effort,
                 )
-            except RateLimitedError as exc:
-                # Free-tier limit — safe (and useful) to show the user verbatim.
-                logger.warning("LLM rate-limited: %s", exc)
+            except (RateLimitedError, ToolCallFormatError) as exc:
+                # Both are the provider/model misbehaving in a way the user can
+                # act on (wait, or rephrase) — safe to show verbatim.
+                logger.warning("LLM call gave up: %s", exc)
                 yield events.error(str(exc))
                 return
             except Exception:  # fatal — no final event → run marked errored

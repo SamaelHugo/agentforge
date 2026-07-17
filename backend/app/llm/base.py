@@ -20,6 +20,17 @@ class RateLimitedError(RuntimeError):
     """
 
 
+class ToolCallFormatError(RuntimeError):
+    """The model kept emitting a tool call the provider could not parse.
+
+    Smaller open models sometimes write the call into the message text (e.g.
+    ``<function=name{...}></function>``) instead of returning a structured tool
+    call. Groq validates server-side and rejects it with HTTP 400
+    ``code=tool_use_failed``. Sampling is stochastic, so a resample usually
+    fixes it; this is raised only once retries are exhausted.
+    """
+
+
 @dataclass
 class ToolCall:
     id: str

@@ -14,13 +14,15 @@ from typing import Any
 
 import httpx
 
-from .base import LLMResult, RateLimitedError, ToolCall
+from .base import LLMResult, RateLimitedError, ToolCall, ToolCallFormatError
 
 logger = logging.getLogger("agentforge.llm")
 
 # Free tiers (Groq especially) rate-limit aggressively; a couple of short
 # retries turn a hard failure into a small pause.
 _MAX_RETRIES = 3
+# Resamples when the model writes a tool call the provider can't parse.
+_MAX_TOOL_RETRIES = 3
 
 OPENAI_PREFIXES = ("gpt-", "o1", "o3", "o4", "chatgpt")
 GROQ_PREFIXES = (
@@ -145,46 +147,85 @@ class OpenAIProvider:
         self._default_model = default_model
         self._prefixes = tuple(p.lower() for p in model_prefixes)
 
+    @staticmethod
+    def _is_tool_use_failed(resp: httpx.Response) -> bool:
+        """Did the provider reject the model's own malformed tool call?
+
+        Groq validates tool calls server-side. When the model writes the call
+        into the text instead of returning it structured, Groq answers 400 with
+        code=tool_use_failed. That is the model misbehaving, not a bad request
+        from us — and it is worth resampling.
+        """
+        try:
+            return resp.json().get("error", {}).get("code") == "tool_use_failed"
+        except Exception:
+            return False
+
     def _post_with_retry(self, body: dict[str, Any]) -> dict[str, Any]:
-        """POST the completion, retrying briefly on 429 (free-tier rate limits)."""
-        for attempt in range(_MAX_RETRIES):
+        """POST the completion, retrying on 429 and on malformed tool calls."""
+        rate_limited = 0
+        tool_failures = 0
+
+        while True:
             resp = httpx.post(
                 self._url,
                 headers={"Authorization": f"Bearer {self._api_key}"},
                 json=body,
                 timeout=120.0,
             )
-            if resp.status_code != 429:
-                if resp.status_code >= 400:
-                    # The provider's body explains *why* — keep it in the logs
-                    # (never in the user-facing trace).
-                    logger.error(
-                        "%s %s returned %s: %s",
-                        self.name,
-                        self._url,
-                        resp.status_code,
-                        resp.text[:800],
+
+            # --- free-tier rate limit: wait it out -------------------------
+            if resp.status_code == 429:
+                rate_limited += 1
+                wait = float(resp.headers.get("retry-after") or (2 * rate_limited))
+                wait = min(wait, 10.0)
+                logger.warning(
+                    "%s rate-limited (429); retry %d/%d in %.1fs",
+                    self.name,
+                    rate_limited,
+                    _MAX_RETRIES,
+                    wait,
+                )
+                if rate_limited >= _MAX_RETRIES:
+                    raise RateLimitedError(
+                        f"{self.name} is rate-limited right now (free tier). "
+                        "Wait a few seconds and try again."
                     )
-                resp.raise_for_status()
-                return resp.json()
+                time.sleep(wait)
+                continue
 
-            # Honour Retry-After when present, otherwise back off gently.
-            wait = float(resp.headers.get("retry-after") or (2 * (attempt + 1)))
-            wait = min(wait, 10.0)
-            logger.warning(
-                "%s rate-limited (429); retry %d/%d in %.1fs",
-                self.name,
-                attempt + 1,
-                _MAX_RETRIES,
-                wait,
-            )
-            if attempt == _MAX_RETRIES - 1:
-                break
-            time.sleep(wait)
+            # --- model botched the tool-call syntax: resample --------------
+            # Sampling is stochastic, so an identical request usually succeeds
+            # on the next attempt. No backoff: nothing is throttling us.
+            if resp.status_code == 400 and self._is_tool_use_failed(resp):
+                tool_failures += 1
+                logger.warning(
+                    "%s rejected a malformed tool call (tool_use_failed); "
+                    "resample %d/%d",
+                    self.name,
+                    tool_failures,
+                    _MAX_TOOL_RETRIES,
+                )
+                if tool_failures >= _MAX_TOOL_RETRIES:
+                    raise ToolCallFormatError(
+                        "The model kept returning a malformed tool call "
+                        f"({self._default_model} on {self.name} does this "
+                        "occasionally). Try rephrasing the task."
+                    )
+                continue
 
-        raise RateLimitedError(
-            f"{self.name} is rate-limited right now (free tier). Wait a few seconds and try again."
-        )
+            if resp.status_code >= 400:
+                # The provider's body explains *why* — keep it in the logs
+                # (never in the user-facing trace).
+                logger.error(
+                    "%s %s returned %s: %s",
+                    self.name,
+                    self._url,
+                    resp.status_code,
+                    resp.text[:800],
+                )
+            resp.raise_for_status()
+            return resp.json()
 
     def complete(
         self,
