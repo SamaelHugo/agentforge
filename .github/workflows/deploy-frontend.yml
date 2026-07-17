@@ -26,4 +26,26 @@ jobs:
       - run: npm install --global vercel@latest
       - run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
       - run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      # NEXT_PUBLIC_API_URL is baked in at build time, and src/lib/api.ts falls
+      # back to http://localhost:8000 when it is missing. That fallback ships a
+      # dead site while every step still reports success, so fail loudly instead.
+      # (It bit us once: the var was stored as "sensitive", whose value `vercel
+      # pull` cannot read back, so CI silently built the fallback.)
+      - name: Verify the API URL was baked in
+        run: |
+          chunks=.vercel/output/static/_next/static/chunks
+          # Guard the guard: a missing path would make grep find nothing and
+          # quietly "pass", which is the exact failure mode we're preventing.
+          if [ ! -d "$chunks" ]; then
+            echo "::error::$chunks not found — vercel build's output layout changed; this check is no longer valid."
+            exit 1
+          fi
+          if grep -rq "localhost:8000" "$chunks"; then
+            echo "::error::Build fell back to http://localhost:8000 — NEXT_PUBLIC_API_URL was empty at build time."
+            echo "Check: vercel env ls  →  it must exist for Production and NOT be type 'sensitive'."
+            exit 1
+          fi
+          echo "OK — bundle targets a real API URL."
+
       - run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
