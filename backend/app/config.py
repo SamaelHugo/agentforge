@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     seed_on_startup: bool = True
     rate_limit_per_min: int = 10  # per-IP cap on agent runs (0 disables)
+    write_limit_per_min: int = 20  # per-IP cap on create/update/delete (0 disables)
 
     @property
     def cors_origin_list(self) -> list[str]:

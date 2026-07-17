@@ -49,20 +49,28 @@ def get_llm_provider() -> LLMProvider:
             raise RuntimeError(
                 "LLM_PROVIDER=openai but OPENAI_API_KEY is not set."
             )
-        from .openai_provider import OpenAIProvider
+        from .openai_provider import OPENAI_PREFIXES, OpenAIProvider
 
-        return OpenAIProvider(
-            api_key=settings.openai_api_key, default_model=settings.default_model
-        )
+        model = settings.default_model
+        if not model.lower().startswith(tuple(p.lower() for p in OPENAI_PREFIXES)):
+            model = "gpt-4o-mini"
+        return OpenAIProvider(api_key=settings.openai_api_key, default_model=model)
 
     if provider == "anthropic":
         if not settings.anthropic_api_key:
             raise RuntimeError(
                 "LLM_PROVIDER=anthropic but ANTHROPIC_API_KEY is not set."
             )
-        from .anthropic_provider import AnthropicProvider
+        from .anthropic_provider import (
+            CLAUDE_PREFIXES,
+            DEFAULT_CLAUDE_MODEL,
+            AnthropicProvider,
+        )
 
-        return AnthropicProvider(api_key=settings.anthropic_api_key)
+        model = settings.default_model
+        if not model.lower().startswith(CLAUDE_PREFIXES):
+            model = DEFAULT_CLAUDE_MODEL
+        return AnthropicProvider(api_key=settings.anthropic_api_key, default_model=model)
 
     from .mock_provider import MockProvider
 

@@ -1,7 +1,7 @@
 # Full local stack: Postgres (pgvector) + FastAPI backend + Next.js frontend.
 #   docker compose up --build
 # Then open http://localhost:3000  (API on http://localhost:8000).
-# Works offline (mock engine); export ANTHROPIC_API_KEY to use live Claude.
+# Works offline (mock engine); export a free GROQ_API_KEY to run on live Llama.
 
 services:
   db:
@@ -25,8 +25,12 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://agentforge:agentforge@db:5432/agentforge
       CORS_ORIGINS: http://localhost:3000
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Whichever key you export wins, in this order (none set -> offline mock).
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      DEFAULT_MODEL: ${DEFAULT_MODEL:-llama-3.3-70b-versatile}
     ports:
       - "8000:8000"
     depends_on:

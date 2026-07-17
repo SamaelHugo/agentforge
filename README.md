@@ -2,13 +2,13 @@
 
 **An AI agent platform — build agents, give them tools and knowledge, and watch them reason in real time.**
 
-**🔗 Live demo: [agentforge-eight.vercel.app](https://agentforge-eight.vercel.app)** — runs in offline mock mode (no signup); open it and hit **Playground**.
+**🔗 Live demo: [agentforge-eight.vercel.app](https://agentforge-eight.vercel.app)** — real agents on **Llama 3.3 70B** via Groq, no signup; open it and hit **Playground**. The backend sleeps on Render's free tier, so the first request may take ~30–60s to wake.
 
 AgentForge is a full-stack application where you create AI agents, configure their system prompt, tools, and a knowledge base, then run them in a split-view **Playground** that streams the agent's "thinking", tool calls, and results live as it works.
 
 The agent loop is a **custom ReAct engine written from scratch (~150 lines) — no LangChain** — so every step is observable, controllable, and cheap. It pairs a hand-built **RAG pipeline** (chunking → embeddings → vector search) with **real-time execution tracing** over Server-Sent Events.
 
-> Runs **fully offline out of the box**: with no API keys it uses a deterministic mock reasoning engine + local embeddings + SQLite, so you can clone and demo it in one command. Add an `ANTHROPIC_API_KEY` to switch to live Claude reasoning.
+> Runs **fully offline out of the box**: with no API keys it uses a deterministic mock reasoning engine + local embeddings + SQLite, so you can clone and demo it in one command. Add a free `GROQ_API_KEY` ([console.groq.com](https://console.groq.com) — no card) to switch to live Llama 3.3 70B reasoning, the same setup the live demo runs. Gemini, OpenAI, and Anthropic Claude work too — the provider is auto-selected from whichever keys you set, in the order Groq → Gemini → OpenAI → Anthropic.
 
 ![AgentForge Playground — chat on the left, the agent's live execution trace (thinking, tool calls, RAG results) on the right](assets/playground.png)
 
@@ -21,7 +21,7 @@ The agent loop is a **custom ReAct engine written from scratch (~150 lines) — 
 - **RAG from scratch** — recursive text splitting, embeddings, and cosine vector search over per-agent document stores. Pluggable embedders (local hashing by default, OpenAI `text-embedding-3-small` optional).
 - **Pluggable LLM providers** — any OpenAI-compatible endpoint: **Groq** (free Llama, no card), Gemini, OpenAI, or Anthropic Claude, plus a deterministic offline mock; selected automatically from your environment.
 - **Tool use with real side effects** — `search_knowledge` (RAG), `draft_email`, `save_to_db` (persists artifacts), `web_search` (mock external integration).
-- **Polished, custom UI** — dark glassmorphism design, editorial typography, Framer Motion micro-interactions. Not a stock template.
+- **Polished, custom UI** — a Raycast-inspired design system: flat dark surfaces, depth from a surface ladder and 1px hairlines rather than blur or glow, Inter + JetBrains Mono, Framer Motion micro-interactions. Not a stock template.
 - **Three ready-to-demo agents** seeded on first run: Lead Qualifier, Support Agent, Research Assistant.
 
 ---
@@ -62,8 +62,8 @@ The agent loop is a **custom ReAct engine written from scratch (~150 lines) — 
 └──────────────────────────────┘                                         │            │                   │
                                                                           │  ┌─────────▼───────┐ ┌───────┐ │
                                                                           │  │ Tools           │ │ LLM   │ │
-                                                                          │  │ search_knowledge│ │ Claude│ │
-                                                                          │  │ draft_email …   │ │ / mock│ │
+                                                                          │  │ search_knowledge│ │ Groq  │ │
+                                                                          │  │ draft_email …   │ │ …/mock│ │
                                                                           │  └─────────┬───────┘ └───────┘ │
                                                                           │  ┌─────────▼───────┐           │
                                                                           │  │ RAG pipeline    │           │
@@ -89,7 +89,7 @@ The agent loop is a **custom ReAct engine written from scratch (~150 lines) — 
 | Backend | Python · FastAPI · SQLAlchemy 2 · Server-Sent Events |
 | Database | SQLite (default) · PostgreSQL + pgvector (production) |
 | AI | OpenAI-compatible LLMs — Groq (free Llama) / Gemini / OpenAI / Anthropic Claude · local or OpenAI embeddings |
-| Deploy | Vercel (frontend) · Railway / Render (backend) · Docker Compose (local full stack) |
+| Deploy | Vercel (frontend) · Render (backend, `render.yaml`) · Docker Compose (local full stack) |
 
 ---
 
@@ -116,8 +116,14 @@ The API is now on **http://localhost:8000** (docs at `/docs`). On first run it
 seeds three demo agents with knowledge bases.
 
 > **No API key?** It just works — the backend falls back to a deterministic mock
-> reasoning engine and local embeddings. To use **live Claude**, set
-> `ANTHROPIC_API_KEY` in `backend/.env`.
+> reasoning engine and local embeddings. To run on a real LLM, set a free
+> `GROQ_API_KEY` in `backend/.env` ([console.groq.com](https://console.groq.com)
+> — no card); the bundled `DEFAULT_MODEL=llama-3.3-70b-versatile` works as-is.
+> `GEMINI_API_KEY`, `OPENAI_API_KEY`, and `ANTHROPIC_API_KEY` also work — with
+> `LLM_PROVIDER=auto` the first key set wins, in the order
+> Groq → Gemini → OpenAI → Anthropic → mock. If you pick Anthropic, also set
+> `DEFAULT_MODEL` to a `claude-*` model: the OpenAI-compatible endpoints remap a
+> mismatched model to their own default, but the Anthropic path sends it as-is.
 
 ### 2. Frontend
 
@@ -141,8 +147,9 @@ All backend settings live in `backend/.env` (see `.env.example`). Highlights:
 | `LLM_PROVIDER` | `auto` | `auto` picks the first key set: Groq → Gemini → OpenAI → Anthropic → `mock`. |
 | `GROQ_API_KEY` | — | **Free**, OpenAI-compatible (Llama) — [console.groq.com](https://console.groq.com), no card. |
 | `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | — | Other providers (Gemini free tier; OpenAI/Claude paid). |
-| `DEFAULT_MODEL` | `gpt-4o-mini` | Match the provider, e.g. `llama-3.3-70b-versatile` (Groq), `gemini-2.0-flash`, `claude-*`. |
+| `DEFAULT_MODEL` | `llama-3.3-70b-versatile` (in `.env.example`) | Match the provider, e.g. `gemini-2.0-flash`, `gpt-4o-mini`, `claude-*`. OpenAI-compatible endpoints remap a mismatched model to their own default; the Anthropic path does not. |
 | `RATE_LIMIT_PER_MIN` | `10` | Per-IP cap on agent runs (public-demo abuse guard; `0` disables). |
+| `WRITE_LIMIT_PER_MIN` | `20` | Per-IP cap on create/update/delete + uploads (`0` disables). |
 | `EMBEDDINGS_PROVIDER` | `auto` | Local hashing embedder by default; set `openai` for `text-embedding-3-small`. |
 | `DATABASE_URL` | `sqlite:///./agentforge.db` | Use a `postgresql+psycopg://…` URL for pgvector. |
 | `CHUNK_SIZE` / `CHUNK_OVERLAP` / `TOP_K` | `800` / `120` / `4` | RAG tuning. |
@@ -189,7 +196,7 @@ LIMIT :k;
 backend/
   app/
     engine/        # hand-rolled ReAct loop + trace events
-    llm/           # provider abstraction: anthropic | mock
+    llm/           # provider abstraction: openai-compatible (groq|gemini|openai) | anthropic | mock
     embeddings/    # local | openai
     rag/           # splitter + ingestion + vector search
     tools/         # search_knowledge, draft_email, save_to_db, web_search
@@ -199,7 +206,7 @@ frontend/
   src/
     app/           # Agents, Builder, Playground, Knowledge, Runs
     components/     # Sidebar, AgentCard, trace/*, chat/*, AgentBuilder, …
-    lib/           # api client, SSE reader, types, design tokens
+    lib/           # api client, SSE reader, tool metadata, types, helpers
 ```
 
 ---

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Agent, Document
 from ..rag import extract_text, ingest_document
+from ..ratelimit import write_limit
 from ..schemas import DocumentOut, TextDocumentCreate
 
 router = APIRouter(prefix="/api", tags=["documents"])
@@ -42,6 +43,7 @@ async def upload_document(
     agent_id: str,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    _rl: None = Depends(write_limit),
 ) -> Document:
     _get_agent_or_404(db, agent_id)
     if file.size is not None and file.size > MAX_UPLOAD_BYTES:
@@ -64,7 +66,10 @@ async def upload_document(
     status_code=status.HTTP_201_CREATED,
 )
 def add_text_document(
-    agent_id: str, payload: TextDocumentCreate, db: Session = Depends(get_db)
+    agent_id: str,
+    payload: TextDocumentCreate,
+    db: Session = Depends(get_db),
+    _rl: None = Depends(write_limit),
 ) -> Document:
     _get_agent_or_404(db, agent_id)
     return ingest_document(
@@ -73,7 +78,11 @@ def add_text_document(
 
 
 @router.delete("/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_document(document_id: str, db: Session = Depends(get_db)):
+def delete_document(
+    document_id: str,
+    db: Session = Depends(get_db),
+    _rl: None = Depends(write_limit),
+):
     document = db.get(Document, document_id)
     if document is None:
         raise HTTPException(status_code=404, detail="Document not found")

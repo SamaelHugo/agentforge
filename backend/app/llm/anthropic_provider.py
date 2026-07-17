@@ -19,12 +19,16 @@ from .base import LLMResult, ToolCall
 
 logger = logging.getLogger("agentforge.llm")
 
+CLAUDE_PREFIXES = ("claude",)
+DEFAULT_CLAUDE_MODEL = "claude-sonnet-5"
+
 
 class AnthropicProvider:
     name = "anthropic"
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str, *, default_model: str = DEFAULT_CLAUDE_MODEL) -> None:
         self._client = anthropic.Anthropic(api_key=api_key)
+        self._default_model = default_model
 
     def complete(
         self,
@@ -36,8 +40,14 @@ class AnthropicProvider:
         max_tokens: int,
         effort: str | None = None,
     ) -> LLMResult:
+        # Only honour the agent's model if it's actually a Claude model —
+        # otherwise a stale/other-provider value (e.g. a seeded "llama-*") would
+        # 404. Mirrors the guard in OpenAIProvider.complete.
+        use_model = (
+            model if (model and model.lower().startswith(CLAUDE_PREFIXES)) else self._default_model
+        )
         base: dict[str, Any] = {
-            "model": model,
+            "model": use_model,
             "max_tokens": max_tokens,
             "messages": messages,
         }

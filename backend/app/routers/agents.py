@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import Agent, AgentTool, Artifact
+from ..ratelimit import write_limit
 from ..schemas import AgentCreate, AgentOut, AgentUpdate, ToolInfo
 from ..serializers import agent_out
 from ..tools import get_tool, tool_catalog
@@ -26,7 +27,11 @@ def list_agents(db: Session = Depends(get_db)) -> list[AgentOut]:
 
 
 @router.post("/agents", response_model=AgentOut, status_code=status.HTTP_201_CREATED)
-def create_agent(payload: AgentCreate, db: Session = Depends(get_db)) -> AgentOut:
+def create_agent(
+    payload: AgentCreate,
+    db: Session = Depends(get_db),
+    _rl: None = Depends(write_limit),
+) -> AgentOut:
     agent = Agent(
         name=payload.name,
         description=payload.description,
@@ -57,7 +62,10 @@ def get_agent(agent_id: str, db: Session = Depends(get_db)) -> AgentOut:
 
 @router.patch("/agents/{agent_id}", response_model=AgentOut)
 def update_agent(
-    agent_id: str, payload: AgentUpdate, db: Session = Depends(get_db)
+    agent_id: str,
+    payload: AgentUpdate,
+    db: Session = Depends(get_db),
+    _rl: None = Depends(write_limit),
 ) -> AgentOut:
     agent = _get_agent_or_404(db, agent_id)
 
@@ -78,7 +86,11 @@ def update_agent(
 
 
 @router.delete("/agents/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_agent(agent_id: str, db: Session = Depends(get_db)):
+def delete_agent(
+    agent_id: str,
+    db: Session = Depends(get_db),
+    _rl: None = Depends(write_limit),
+):
     agent = _get_agent_or_404(db, agent_id)
     db.delete(agent)
     db.commit()
