@@ -49,9 +49,30 @@ const NAV: NavItem[] = [
   },
 ];
 
+/** The backend reports whichever LLM provider actually resolved — show that,
+ *  instead of assuming anything non-Anthropic is the offline mock. */
+const ENGINE_LABEL: Record<string, string> = {
+  groq: "Groq · live",
+  openai: "OpenAI · live",
+  anthropic: "Claude · live",
+  gemini: "Gemini · live",
+};
+
+function describeEngine(provider: string | null): { label: string; dot: string } {
+  if (provider === null) return { label: "connecting…", dot: "bg-ink-faint" };
+  if (provider === "offline") return { label: "backend offline", dot: "bg-accent-red" };
+  if (provider === "mock")
+    return { label: "mock (offline)", dot: "bg-accent-amber animate-pulse-soft" };
+  return {
+    label: ENGINE_LABEL[provider] ?? `${provider} · live`,
+    dot: "bg-accent-green animate-pulse-soft",
+  };
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const [provider, setProvider] = useState<string | null>(null);
+  const engine = describeEngine(provider);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/health`)
@@ -102,26 +123,11 @@ export function Sidebar() {
       <div className="mt-auto px-2">
         <div className="flex items-center gap-2 rounded-xl border border-line-soft bg-surface px-3 py-2.5">
           <span
-            className={cn(
-              "h-2 w-2 rounded-full",
-              provider === "anthropic"
-                ? "bg-accent-green animate-pulse-soft"
-                : provider === "offline"
-                  ? "bg-accent-red"
-                  : "bg-accent-amber animate-pulse-soft",
-            )}
+            className={cn("h-2 w-2 rounded-full", engine.dot)}
           />
           <div className="leading-tight">
             <p className="micro-label">Engine</p>
-            <p className="text-xs text-ink-muted">
-              {provider === null
-                ? "connecting…"
-                : provider === "anthropic"
-                  ? "Claude (live)"
-                  : provider === "offline"
-                    ? "backend offline"
-                    : "mock (offline)"}
-            </p>
+            <p className="text-xs text-ink-muted">{engine.label}</p>
           </div>
         </div>
       </div>

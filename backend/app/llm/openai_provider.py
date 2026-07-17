@@ -8,11 +8,19 @@ OpenAI shape. Raw HTTP (httpx), no extra SDK.
 from __future__ import annotations
 
 import json
+import logging
+import time
 from typing import Any
 
 import httpx
 
-from .base import LLMResult, ToolCall
+from .base import LLMResult, RateLimitedError, ToolCall
+
+logger = logging.getLogger("agentforge.llm")
+
+# Free tiers (Groq especially) rate-limit aggressively; a couple of short
+# retries turn a hard failure into a small pause.
+_MAX_RETRIES = 3
 
 OPENAI_PREFIXES = ("gpt-", "o1", "o3", "o4", "chatgpt")
 GROQ_PREFIXES = (
@@ -137,6 +145,47 @@ class OpenAIProvider:
         self._default_model = default_model
         self._prefixes = tuple(p.lower() for p in model_prefixes)
 
+    def _post_with_retry(self, body: dict[str, Any]) -> dict[str, Any]:
+        """POST the completion, retrying briefly on 429 (free-tier rate limits)."""
+        for attempt in range(_MAX_RETRIES):
+            resp = httpx.post(
+                self._url,
+                headers={"Authorization": f"Bearer {self._api_key}"},
+                json=body,
+                timeout=120.0,
+            )
+            if resp.status_code != 429:
+                if resp.status_code >= 400:
+                    # The provider's body explains *why* — keep it in the logs
+                    # (never in the user-facing trace).
+                    logger.error(
+                        "%s %s returned %s: %s",
+                        self.name,
+                        self._url,
+                        resp.status_code,
+                        resp.text[:800],
+                    )
+                resp.raise_for_status()
+                return resp.json()
+
+            # Honour Retry-After when present, otherwise back off gently.
+            wait = float(resp.headers.get("retry-after") or (2 * (attempt + 1)))
+            wait = min(wait, 10.0)
+            logger.warning(
+                "%s rate-limited (429); retry %d/%d in %.1fs",
+                self.name,
+                attempt + 1,
+                _MAX_RETRIES,
+                wait,
+            )
+            if attempt == _MAX_RETRIES - 1:
+                break
+            time.sleep(wait)
+
+        raise RateLimitedError(
+            f"{self.name} is rate-limited right now (free tier). Wait a few seconds and try again."
+        )
+
     def complete(
         self,
         *,
@@ -162,14 +211,7 @@ class OpenAIProvider:
             body["tools"] = to_openai_tools(tools)
             body["tool_choice"] = "auto"
 
-        resp = httpx.post(
-            self._url,
-            headers={"Authorization": f"Bearer {self._api_key}"},
-            json=body,
-            timeout=120.0,
-        )
-        resp.raise_for_status()
-        data = resp.json()
+        data = self._post_with_retry(body)
         message = data["choices"][0]["message"]
 
         text = message.get("content") or ""

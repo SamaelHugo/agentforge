@@ -178,7 +178,7 @@ LIMIT :k;
 ## ☁️ Deploy
 
 - **Frontend → Vercel.** Import `frontend/`, set `NEXT_PUBLIC_API_URL` to your backend URL.
-- **Backend → Render / Railway.** A [`render.yaml`](render.yaml) blueprint is included — on Render: **New → Blueprint → connect this repo** (auto-deploys on every push). Or deploy `backend/` (Dockerfile) on Railway. Set `OPENAI_API_KEY` and `CORS_ORIGINS`.
+- **Backend → Render (free).** A [`render.yaml`](render.yaml) blueprint is included — **New → Blueprint → connect this repo**. Render prompts for `GROQ_API_KEY` and auto-deploys on every push. (Any Docker host works: `backend/` ships a Dockerfile.)
 - **Database → Railway Postgres / Supabase** (both support pgvector).
 
 ---

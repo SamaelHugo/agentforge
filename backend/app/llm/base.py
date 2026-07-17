@@ -12,6 +12,14 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
 
+class RateLimitedError(RuntimeError):
+    """The provider is rate-limiting us (common on free tiers).
+
+    Provider-agnostic on purpose: the engine surfaces this message to the user
+    verbatim, so it must stay free of internal detail.
+    """
+
+
 @dataclass
 class ToolCall:
     id: str
