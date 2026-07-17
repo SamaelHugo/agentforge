@@ -186,7 +186,7 @@ LIMIT :k;
 
 - **Frontend → Vercel.** Import `frontend/`, set `NEXT_PUBLIC_API_URL` to your backend URL.
 - **Backend → Render (free).** A [`render.yaml`](render.yaml) blueprint is included — **New → Blueprint → connect this repo**. Render prompts for `GROQ_API_KEY` and auto-deploys on every push. (Any Docker host works: `backend/` ships a Dockerfile.)
-- **Database → Railway Postgres / Supabase** (both support pgvector).
+- **Database → Neon / Supabase** (both free, both support pgvector). Set `DATABASE_URL` on the backend; without it the app uses SQLite, which Render's free tier wipes on every restart. Avoid Render's *own* free Postgres — it expires 30 days after creation and is then deleted.
 
 ---
 

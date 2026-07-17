@@ -21,3 +21,18 @@ services:
       # Render prompts for this at blueprint creation and keeps it secret.
       - key: GROQ_API_KEY
         sync: false
+      # DATABASE_URL is intentionally NOT declared here.
+      #
+      # Unset, the backend uses SQLite on the container's filesystem. Render's
+      # free tier has no persistent disk and spins down after 15 min idle, so
+      # that database is wiped on every restart: agents get re-seeded with new
+      # ids and run history resets. Fine for a demo, not for keeping history.
+      #
+      # To persist, set DATABASE_URL in the dashboard (Environment tab) to an
+      # external Postgres. Any provider works — the app normalises the URL and
+      # ships psycopg. Neon (neon.tech) is the recommended free option: no
+      # expiry, and it auto-wakes.
+      #
+      # Deliberately NOT a free Render Postgres: those expire 30 days after
+      # creation and are deleted 14 days later, which would take the demo down
+      # silently and permanently. See https://render.com/docs/free
