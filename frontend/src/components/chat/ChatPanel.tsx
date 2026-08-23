@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUp, Sparkles } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ function formatInline(text: string): ReactNode[] {
       nodes.push(<strong key={key++} className="font-semibold text-ink">{token.slice(2, -2)}</strong>);
     } else if (token.startsWith("`")) {
       nodes.push(
-        <code key={key++} className="rounded bg-surface-raised px-1 py-0.5 font-mono text-[0.85em]">
+        <code key={key++} className="bg-surface-raised px-1 py-0.5 font-mono text-[0.85em]">
           {token.slice(1, -1)}
         </code>,
       );
@@ -40,14 +40,15 @@ function formatInline(text: string): ReactNode[] {
 }
 
 function MessageBody({ text }: { text: string }) {
+  const lines = text.split("\n");
   return (
     <>
-      {text.split("\n").map((line, i) => {
+      {lines.map((line, i) => {
         if (line.startsWith("> ")) {
           return (
             <blockquote
               key={i}
-              className="my-1 border-l-2 border-accent-cyan/40 pl-3 italic text-ink-muted"
+              className="my-2 border-l-2 border-brand/50 pl-3 font-editorial text-lg italic text-ink-muted"
             >
               {formatInline(line.slice(2))}
             </blockquote>
@@ -56,7 +57,7 @@ function MessageBody({ text }: { text: string }) {
         return (
           <Fragment key={i}>
             {formatInline(line)}
-            {i < text.split("\n").length - 1 && <br />}
+            {i < lines.length - 1 && <br />}
           </Fragment>
         );
       })}
@@ -106,27 +107,34 @@ export function ChatPanel({
   const showThinking = running && messages[messages.length - 1]?.role === "user";
 
   return (
-    <div className="surface flex h-full min-h-0 flex-col rounded-card">
-      <div className="flex-1 space-y-5 overflow-auto px-6 py-6">
+    <section className="flex h-full min-h-0 flex-col border-y border-line bg-surface">
+      <div className="flex items-center justify-between border-b border-line px-5 py-3">
+        <p className="micro-label">Conversation</p>
+        <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-ink-faint">Live session</p>
+      </div>
+      <div className="flex-1 space-y-8 overflow-auto px-5 py-7 sm:px-8 sm:py-9">
         {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <span className="mb-4 grid h-12 w-12 place-items-center rounded-full bg-accent-cyan/15 text-accent-cyan">
-              <Sparkles size={22} />
-            </span>
-            <h3 className="font-display text-lg text-ink">Send the agent a task</h3>
-            <p className="mt-2 max-w-xs text-sm text-ink-muted">
-              Watch it reason, call tools, and answer — live, on the right.
+          <div className="flex h-full min-h-[420px] flex-col justify-end">
+            <p className="micro-label text-brand">Ask / test / observe</p>
+            <h3 className="mt-5 max-w-xl font-editorial text-5xl leading-[0.95] tracking-[-0.03em] text-ink sm:text-6xl">
+              Give the agent a real task.
+            </h3>
+            <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-muted">
+              Start with an outcome. The execution inspector records tools, sources and errors without interrupting the conversation.
             </p>
             {suggestions.length > 0 && (
-              <div className="mt-6 flex flex-col gap-2">
-                {suggestions.map((s) => (
+              <div className="mt-10 border-t border-line">
+                {suggestions.map((suggestion, index) => (
                   <button
-                    key={s}
-                    onClick={() => onSend(s)}
+                    key={suggestion}
+                    type="button"
+                    onClick={() => onSend(suggestion)}
                     disabled={running}
-                    className="surface-soft rounded-xl px-4 py-2.5 text-left text-sm text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
+                    className="group grid w-full grid-cols-[32px_1fr_auto] gap-3 border-b border-line py-3 text-left text-sm text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
                   >
-                    {s}
+                    <span className="font-mono text-[9px] text-ink-faint">{String(index + 1).padStart(2, "0")}</span>
+                    <span>{suggestion}</span>
+                    <ArrowUp size={13} className="rotate-45 text-ink-faint transition-colors group-hover:text-brand" />
                   </button>
                 ))}
               </div>
@@ -134,32 +142,32 @@ export function ChatPanel({
           </div>
         )}
 
-        {messages.map((m, i) => (
+        {messages.map((message, index) => (
           <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}
+            key={`${message.role}-${index}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.22 }}
+            className="grid gap-3 border-b border-line-soft pb-8 sm:grid-cols-[72px_minmax(0,1fr)]"
           >
+            <p className={cn("micro-label pt-1", message.role === "assistant" && "text-brand")}>
+              {message.role === "user" ? "You" : "Agent"}
+            </p>
             <div
               className={cn(
-                "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                m.role === "user"
-                  ? "bg-accent-cyan/15 text-ink ring-1 ring-inset ring-accent-cyan/25"
-                  : m.error
-                    ? "surface-soft text-accent-red"
-                    : "surface-soft text-ink",
+                "max-w-3xl text-[15px] leading-[1.75]",
+                message.role === "user" ? "font-medium text-ink" : message.error ? "text-accent-red" : "text-ink",
               )}
             >
-              <MessageBody text={m.text} />
+              <MessageBody text={message.text} />
             </div>
           </motion.div>
         ))}
 
         {showThinking && (
-          <div className="flex justify-start">
-            <div className="surface-soft rounded-2xl px-4 py-3">
+          <div className="grid gap-3 sm:grid-cols-[72px_minmax(0,1fr)]">
+            <p className="micro-label pt-1 text-brand">Agent</p>
+            <div className="py-1">
               <TypingDots />
             </div>
           </div>
@@ -167,8 +175,8 @@ export function ChatPanel({
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-line p-4">
-        <div className="field flex items-end gap-2 rounded-2xl p-2">
+      <div className="border-t border-line bg-white p-4 sm:p-5">
+        <div className="field flex items-end gap-2 rounded-[2px] p-2">
           <textarea
             aria-label="Agent message"
             value={value}
@@ -188,12 +196,12 @@ export function ChatPanel({
             aria-label="Send message"
             onClick={submit}
             disabled={running || !value.trim()}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-bg transition-all hover:bg-white/90 disabled:opacity-40"
+            className="grid h-9 w-9 shrink-0 place-items-center bg-ink text-white transition-colors hover:bg-brand disabled:opacity-40"
           >
             <ArrowUp size={17} />
           </button>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

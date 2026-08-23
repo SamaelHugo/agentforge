@@ -1,75 +1,67 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { Database, MessageSquare, Pencil, Play } from "lucide-react";
+import { ArrowUpRight, Database, MessageSquare, Play } from "lucide-react";
 import Link from "next/link";
 
 import type { Agent } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { ToolPill } from "@/components/ToolPill";
-import { LinkButton, StatusDot } from "@/components/ui";
+import { StatusDot } from "@/components/ui";
 
-export function AgentCard({ agent }: { agent: Agent }) {
+export function AgentCard({ agent, ordinal }: { agent: Agent; ordinal: number }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -4 }}
-      className="surface group flex flex-col rounded-t-card rounded-b-xl p-5"
-    >
-      <div className="mb-3 flex items-center justify-between">
-        <span className="flex items-center gap-2">
-          <StatusDot status={agent.status} />
-          <span className="micro-label">{agent.status}</span>
+    <article className="group border-b border-line transition-colors hover:bg-white/60">
+      <div className="grid gap-5 py-6 sm:grid-cols-[40px_minmax(0,1fr)_auto] lg:grid-cols-[40px_minmax(260px,1.25fr)_minmax(210px,.9fr)_150px_auto] lg:items-center">
+        <span className="font-mono text-[10px] text-ink-faint">
+          {String(ordinal).padStart(2, "0")}
         </span>
-        <span className="font-mono text-[11px] text-ink-faint">{agent.model}</span>
-      </div>
 
-      <Link href={`/agents/${agent.id}`}>
-        <h3 className="font-display text-xl font-semibold tracking-tight text-ink transition-colors group-hover:text-accent-cyan">
-          {agent.name}
-        </h3>
-      </Link>
-      <p className="mt-1.5 line-clamp-2 min-h-[2.5rem] text-sm leading-relaxed text-ink-muted">
-        {agent.description || "No description."}
-      </p>
-
-      {agent.tools.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {agent.tools.map((t) => (
-            <ToolPill key={t} name={t} />
-          ))}
+        <div className="min-w-0">
+          <Link href={`/agents/${agent.id}`} className="inline-flex items-center gap-2">
+            <h3 className="font-display text-xl font-semibold tracking-[-0.035em] text-ink transition-colors group-hover:text-brand">
+              {agent.name}
+            </h3>
+            <ArrowUpRight size={15} className="text-ink-faint transition-colors group-hover:text-brand" />
+          </Link>
+          <p className="mt-1 max-w-lg text-sm leading-relaxed text-ink-muted">
+            {agent.description || "No description."}
+          </p>
         </div>
-      )}
 
-      <div className="mt-5 flex items-center gap-4 border-t border-line-soft pt-4 text-xs text-ink-muted">
-        <span className="flex items-center gap-1.5">
-          <MessageSquare size={13} className="text-ink-faint" />
-          {agent.run_count} {agent.run_count === 1 ? "run" : "runs"}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Database size={13} className="text-ink-faint" />
-          {agent.document_count} {agent.document_count === 1 ? "doc" : "docs"}
-        </span>
-        <span className="ml-auto">{timeAgo(agent.last_run_at)}</span>
-      </div>
+        <div className="flex flex-wrap gap-1.5 sm:col-start-2 lg:col-start-auto">
+          {agent.tools.length > 0 ? (
+            agent.tools.map((tool) => <ToolPill key={tool} name={tool} />)
+          ) : (
+            <span className="text-xs text-ink-faint">No tools</span>
+          )}
+        </div>
 
-      <div className="mt-4 flex gap-2">
-        <LinkButton
-          href={`/playground/${agent.id}`}
-          variant="primary"
-          size="sm"
-          className="flex-1"
-        >
-          <Play size={14} />
-          Playground
-        </LinkButton>
-        <LinkButton href={`/agents/${agent.id}`} variant="surface" size="sm">
-          <Pencil size={14} />
-          Edit
-        </LinkButton>
+        <div className="flex items-center gap-4 text-xs text-ink-muted sm:col-start-2 lg:col-start-auto lg:block lg:space-y-1.5">
+          <span className="flex items-center gap-1.5">
+            <MessageSquare size={13} className="text-ink-faint" />
+            {agent.run_count} {agent.run_count === 1 ? "run" : "runs"}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Database size={13} className="text-ink-faint" />
+            {agent.document_count} {agent.document_count === 1 ? "doc" : "docs"}
+          </span>
+          <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink-faint">
+            {timeAgo(agent.last_run_at)}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 sm:col-start-3 sm:row-start-1 sm:justify-self-end lg:col-start-auto lg:row-start-auto">
+          <span className="hidden items-center gap-2 xl:flex">
+            <StatusDot status={agent.status} />
+            <span className="micro-label">{agent.status}</span>
+          </span>
+          <Link
+            href={`/playground/${agent.id}`}
+            className="inline-flex h-9 items-center gap-2 border border-ink bg-ink px-3 text-xs font-medium text-white transition-colors hover:border-brand hover:bg-brand"
+          >
+            <Play size={13} />
+            Run
+          </Link>
+        </div>
       </div>
-    </motion.div>
+    </article>
   );
 }

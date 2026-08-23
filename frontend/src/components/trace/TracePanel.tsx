@@ -50,12 +50,12 @@ export function TracePanel({
   }, [steps.length]);
 
   return (
-    <div className={cn("surface flex h-full min-h-0 flex-col rounded-card", className)}>
-      <div className="flex items-center justify-between border-b border-line px-5 py-4">
+    <section className={cn("flex h-full min-h-0 flex-col border-y border-line bg-white", className)}>
+      <div className="flex items-center justify-between border-b border-line px-5 py-3">
         <div className="flex items-center gap-2">
-          <BrainCircuit size={16} className="text-accent-cyan" />
-          <h2 className="font-display text-base font-semibold text-ink">
-            Execution Trace
+          <BrainCircuit size={15} className="text-brand" />
+          <h2 className="text-sm font-semibold tracking-[-0.02em] text-ink">
+            Execution inspector
           </h2>
         </div>
         <span className="flex items-center gap-2 text-xs text-ink-muted">
@@ -64,7 +64,7 @@ export function TracePanel({
         </span>
       </div>
 
-      <div className="flex items-center gap-4 border-b border-line-soft px-5 py-2.5">
+      <div className="flex flex-wrap items-center gap-4 border-b border-line-soft px-5 py-2.5">
         {LEGEND.map((l) => (
           <span key={l.label} className="flex items-center gap-1.5 text-[11px] text-ink-faint">
             <span className={cn("h-1.5 w-1.5 rounded-full", l.className)} />
@@ -76,11 +76,10 @@ export function TracePanel({
       <div className="flex-1 overflow-auto px-5 py-5">
         {steps.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <Activity size={26} className="mb-3 text-ink-faint" />
-            <p className="text-sm text-ink-muted">
-              The agent&apos;s reasoning will appear here —
-              <br />
-              thinking, tool calls, and results, live.
+            <Activity size={22} className="mb-5 text-brand" />
+            <p className="micro-label">Waiting for a run</p>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-muted">
+              Tools, sources and execution events will appear here when the agent starts working.
             </p>
           </div>
         ) : (
@@ -99,6 +98,6 @@ export function TracePanel({
         )}
         <div ref={bottomRef} />
       </div>
-    </div>
+    </section>
   );
 }

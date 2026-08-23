@@ -39,8 +39,8 @@ export default function RunReplayPage() {
       ) : (
         <>
           <PageHeader
-            eyebrow="Run replay"
-            title="Execution trace"
+            eyebrow="Run / Replay"
+            title="Execution record."
             description={
               <span className="flex items-center gap-2">
                 <StatusDot status={run.status} />
@@ -50,29 +50,32 @@ export default function RunReplayPage() {
             }
           />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             {/* conversation */}
-            <div className="space-y-4">
-              <div className="flex justify-end">
-                <div className="max-w-[90%] rounded-2xl bg-accent-cyan/15 px-4 py-3 text-sm text-ink ring-1 ring-inset ring-accent-cyan/25">
+            <div className="space-y-8 lg:col-span-7">
+              <div className="grid gap-3 border-t border-line py-5 sm:grid-cols-[80px_minmax(0,1fr)]">
+                <p className="micro-label pt-1">Input</p>
+                <div className="max-w-2xl text-[15px] font-medium leading-relaxed text-ink">
                   {run.input}
                 </div>
               </div>
               {run.status === "error" ? (
-                <div className="surface-soft rounded-2xl px-4 py-3 text-sm text-accent-red">
-                  {run.error || "Run failed."}
+                <div className="grid gap-3 border-t border-line py-5 sm:grid-cols-[80px_minmax(0,1fr)]">
+                  <p className="micro-label pt-1 text-accent-red">Error</p>
+                  <p className="text-sm text-accent-red">{run.error || "Run failed."}</p>
                 </div>
               ) : (
-                <div className="surface-soft whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed text-ink">
-                  {run.output || "—"}
+                <div className="grid gap-3 border-t border-line py-5 sm:grid-cols-[80px_minmax(0,1fr)]">
+                  <p className="micro-label pt-1 text-brand">Output</p>
+                  <div className="max-w-2xl whitespace-pre-wrap text-[15px] leading-[1.75] text-ink">{run.output || "—"}</div>
                 </div>
               )}
             </div>
 
             {/* trace */}
-            <div className="surface rounded-card p-5">
+            <div className="border-y border-line bg-white p-5 lg:col-span-5">
               <div className="mb-4 flex items-center gap-2 border-b border-line pb-3">
-                <BrainCircuit size={16} className="text-accent-cyan" />
+                <BrainCircuit size={16} className="text-brand" />
                 <h2 className="font-display text-base font-semibold text-ink">
                   Reasoning steps
                 </h2>

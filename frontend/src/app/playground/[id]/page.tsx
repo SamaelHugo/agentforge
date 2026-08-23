@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Settings2 } from "lucide-react";
+import { ArrowLeft, PanelRightClose, PanelRightOpen, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -67,6 +67,7 @@ export default function PlaygroundPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [events, setEvents] = useState<TraceEvent[]>([]);
   const [status, setStatus] = useState<Status>("idle");
+  const [traceOpen, setTraceOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const finalRef = useRef("");
 
@@ -147,43 +148,56 @@ export default function PlaygroundPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
-      <header className="flex items-center gap-4 border-b border-line px-8 py-4">
+    <div className="flex min-h-[calc(100vh-126px)] flex-col md:h-screen md:min-h-0">
+      <header className="grid gap-4 border-b border-line bg-surface px-5 py-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center md:px-8">
         <Link
           href="/playground"
-          className="grid h-9 w-9 place-items-center rounded-xl text-ink-muted transition-colors hover:bg-surface-raised hover:text-ink"
+          className="grid h-9 w-9 place-items-center border border-line bg-white text-ink-muted transition-colors hover:border-ink hover:text-ink"
+          aria-label="Back to agent selection"
         >
           <ArrowLeft size={18} />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-xl font-semibold tracking-tight text-ink">
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-xl font-semibold tracking-[-0.04em] text-ink">
             {agent.name}
-          </h1>
-          <p className="truncate text-xs text-ink-muted">
-            <span className="font-mono">{agent.model}</span> · {agent.description}
-          </p>
+            </h1>
+            <span className="micro-label text-brand">{status}</span>
+          </div>
+          <p className="mt-1 truncate text-xs text-ink-muted">{agent.description}</p>
         </div>
-        <div className="hidden items-center gap-1.5 md:flex">
-          {agent.tools.map((t) => (
-            <ToolPill key={t} name={t} />
-          ))}
+        <div className="col-span-full flex items-center gap-2 sm:col-span-1">
+          <div className="mr-2 hidden items-center gap-1.5 xl:flex">
+            {agent.tools.slice(0, 3).map((tool) => <ToolPill key={tool} name={tool} />)}
+          </div>
+          <button
+            type="button"
+            onClick={() => setTraceOpen((open) => !open)}
+            className="inline-flex h-9 items-center gap-2 border border-line bg-white px-3 text-xs font-medium text-ink-muted transition-colors hover:border-ink hover:text-ink"
+            aria-label={traceOpen ? "Hide execution inspector" : "Show execution inspector"}
+          >
+            {traceOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
+            <span className="hidden sm:inline">Inspector</span>
+            {events.length > 0 && <span className="font-mono text-[9px] text-brand">{events.length}</span>}
+          </button>
+          <Link
+            href={`/agents/${agent.id}`}
+            className="grid h-9 w-9 place-items-center border border-line bg-white text-ink-muted transition-colors hover:border-ink hover:text-ink"
+            aria-label="Agent settings"
+          >
+            <Settings2 size={16} />
+          </Link>
         </div>
-        <Link
-          href={`/agents/${agent.id}`}
-          className="grid h-9 w-9 place-items-center rounded-xl text-ink-muted transition-colors hover:bg-surface-raised hover:text-ink"
-        >
-          <Settings2 size={18} />
-        </Link>
       </header>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 p-6 lg:grid-cols-2">
+      <div className={`grid min-h-0 flex-1 grid-cols-1 gap-5 p-4 sm:p-5 ${traceOpen ? "lg:grid-cols-[minmax(0,1.65fr)_minmax(360px,.85fr)]" : "lg:grid-cols-1"}`}>
         <ChatPanel
           messages={messages}
           onSend={send}
           running={status === "running"}
           suggestions={messages.length === 0 ? suggestionsFor(agent) : []}
         />
-        <TracePanel events={events} status={status} />
+        {traceOpen && <TracePanel events={events} status={status} />}
       </div>
     </div>
   );

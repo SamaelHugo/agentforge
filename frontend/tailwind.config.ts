@@ -1,50 +1,43 @@
 import type { Config } from "tailwindcss";
 
-/**
- * Design language: Raycast.
- * Dark-only. Depth comes from a surface ladder + 1px hairlines — never from
- * shadows, blur or glass. Brand red is a *signal*, not a call-to-action:
- * the primary CTA is plain white, exactly as Raycast does it.
- */
+/** Swiss editorial SaaS: warm paper, ink, hairlines, and one red accent. */
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        // canvas → panel → raised → popover (the whole depth system)
-        bg: "#07080A",
+        bg: "#F2F1EC",
         surface: {
-          DEFAULT: "#0D0D0F",
-          raised: "#121214",
-          pop: "#17171A",
+          DEFAULT: "#FAFAF7",
+          raised: "#ECEBE5",
+          pop: "#FFFFFF",
         },
         line: {
-          DEFAULT: "#242728", // hairline border
-          soft: "#1A1C1D", // divider nested inside a bordered panel
+          DEFAULT: "#CBCAC3",
+          soft: "#E1E0DA",
         },
         ink: {
-          DEFAULT: "#F2F2F3",
-          muted: "#8B8D90",
-          faint: "#5F6266",
+          DEFAULT: "#151515",
+          muted: "#66665F",
+          faint: "#999891",
         },
-        // Raycast brand red — status/logo signal only, never a CTA
-        brand: "#FF6363",
-        // Raycast's semantic set — the trace panel's whole vocabulary
+        brand: "#E5482D",
         accent: {
-          cyan: "#57C1FF", // info / tool call
-          violet: "#B084F5",
-          green: "#59D499", // success / result
-          amber: "#FFC531", // warning
-          red: "#FF6161", // error
+          cyan: "#2251D1",
+          violet: "#7247A7",
+          green: "#167A55",
+          amber: "#A66500",
+          red: "#C7342D",
         },
       },
       fontFamily: {
-        display: ["var(--font-inter)", "system-ui", "sans-serif"],
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-helvetica)", "Helvetica Neue", "Arial", "sans-serif"],
+        sans: ["var(--font-helvetica)", "Helvetica Neue", "Arial", "sans-serif"],
+        editorial: ["var(--font-garamond)", "Garamond", "Georgia", "serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       borderRadius: {
-        card: "10px",
+        card: "2px",
       },
       keyframes: {
         shimmer: {

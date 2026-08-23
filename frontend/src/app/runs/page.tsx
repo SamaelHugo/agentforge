@@ -5,9 +5,9 @@ export default function RunsIndexPage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="Runs"
-        title="Execution history"
-        description="Pick an agent to browse its past runs — every step of reasoning and tool use is recorded and replayable."
+        eyebrow="04 / Run archive"
+        title="Execution history."
+        description="Choose an agent to inspect previous work, outcomes, errors and the tool activity behind every answer."
       />
       <AgentPicker basePath="/runs" />
     </PageShell>

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { EmptyState, LinkButton, PageHeader, PageShell, Skeleton, StatusDot } from "@/components/ui";
+import { AgentNav } from "@/components/AgentNav";
 import { api } from "@/lib/api";
 import type { Agent, Run } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
@@ -31,9 +32,9 @@ export default function RunHistoryPage() {
         All agents
       </Link>
       <PageHeader
-        eyebrow="Runs"
-        title={agent ? agent.name : "Loading…"}
-        description="Every run is recorded with its full reasoning trace."
+        eyebrow="Runs / Agent history"
+        title={agent ? `${agent.name}.` : "Loading…"}
+        description="Every completed task, failure and tool event remains available for review."
         actions={
           agent && (
             <LinkButton href={`/playground/${agent.id}`} variant="primary">
@@ -42,6 +43,8 @@ export default function RunHistoryPage() {
           )
         }
       />
+
+      {agent && <AgentNav agentId={agent.id} />}
 
       {runs === null && (
         <div className="space-y-3">
@@ -67,12 +70,12 @@ export default function RunHistoryPage() {
       )}
 
       {runs && runs.length > 0 && (
-        <div className="space-y-3">
+        <div className="border-t border-line">
           {runs.map((run) => (
             <Link
               key={run.id}
               href={`/runs/${id}/${run.id}`}
-              className="surface group flex items-center gap-4 rounded-xl px-5 py-4 transition-all hover:bg-surface-raised"
+              className="group grid gap-4 border-b border-line py-5 transition-colors hover:bg-white/60 sm:grid-cols-[16px_minmax(0,1fr)_100px_20px] sm:items-center"
             >
               <StatusDot status={run.status} />
               <div className="min-w-0 flex-1">
@@ -86,7 +89,7 @@ export default function RunHistoryPage() {
               </span>
               <ChevronRight
                 size={16}
-                className="shrink-0 text-ink-faint transition-transform group-hover:translate-x-1 group-hover:text-accent-cyan"
+                className="shrink-0 text-ink-faint transition-colors group-hover:text-brand"
               />
             </Link>
           ))}

@@ -13,6 +13,7 @@ import {
   PageShell,
   Skeleton,
 } from "@/components/ui";
+import { AgentNav } from "@/components/AgentNav";
 import { api } from "@/lib/api";
 import type { Agent, Artifact } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
@@ -42,9 +43,9 @@ export default function ArtifactsPage() {
         All agents
       </Link>
       <PageHeader
-        eyebrow="Artifacts"
-        title={agent ? agent.name : "Loading…"}
-        description="Persistent output created by this agent's tools."
+        eyebrow="Artifacts / Agent archive"
+        title={agent ? `${agent.name}.` : "Loading…"}
+        description="Persistent reports, records and structured output created by this agent's tools."
         actions={
           agent && (
             <LinkButton href={`/playground/${agent.id}`} variant="primary">
@@ -53,6 +54,8 @@ export default function ArtifactsPage() {
           )
         }
       />
+
+      {agent && <AgentNav agentId={agent.id} />}
 
       {artifacts === null && (
         <div className="space-y-3">
@@ -78,32 +81,28 @@ export default function ArtifactsPage() {
       )}
 
       {artifacts && artifacts.length > 0 && (
-        <div className="space-y-4">
+        <div className="border-t border-line">
           {artifacts.map((artifact) => (
-            <article key={artifact.id} className="surface rounded-card p-5">
-              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="mb-2 flex items-center gap-2">
-                    <Badge>{artifact.kind || "record"}</Badge>
-                    <span className="text-xs text-ink-faint">
-                      {timeAgo(artifact.created_at)}
-                    </span>
-                  </div>
-                  <h2 className="font-display text-lg font-semibold text-ink">
-                    {artifact.title || "Untitled artifact"}
-                  </h2>
+            <article key={artifact.id} className="grid gap-6 border-b border-line py-7 lg:grid-cols-[260px_minmax(0,1fr)]">
+              <div>
+                <div className="mb-3 flex items-center gap-2">
+                  <Badge>{artifact.kind || "record"}</Badge>
+                  <span className="text-xs text-ink-faint">{timeAgo(artifact.created_at)}</span>
                 </div>
+                <h2 className="font-editorial text-2xl font-medium leading-tight text-ink">
+                  {artifact.title || "Untitled artifact"}
+                </h2>
                 {artifact.run_id && (
                   <Link
                     href={`/runs/${id}/${artifact.run_id}`}
-                    className="inline-flex items-center gap-1.5 text-xs text-accent-cyan transition-colors hover:text-ink"
+                    className="mt-5 inline-flex items-center gap-1.5 text-xs text-brand transition-colors hover:text-ink"
                   >
                     View source run
                     <ExternalLink size={13} />
                   </Link>
                 )}
               </div>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-muted">
+              <p className="max-w-3xl whitespace-pre-wrap text-sm leading-[1.75] text-ink-muted">
                 {artifact.content || "No text content."}
               </p>
             </article>

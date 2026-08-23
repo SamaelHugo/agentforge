@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { KnowledgeManager } from "@/components/KnowledgeManager";
+import { AgentNav } from "@/components/AgentNav";
 import { PageHeader, PageShell } from "@/components/ui";
 import { api } from "@/lib/api";
 import type { Agent } from "@/lib/types";
@@ -28,10 +29,11 @@ export default function KnowledgePage() {
         All agents
       </Link>
       <PageHeader
-        eyebrow="Knowledge Base"
-        title={agent ? agent.name : "Loading…"}
-        description="Documents available to this agent's semantic search tool."
+        eyebrow="Knowledge / Agent library"
+        title={agent ? `${agent.name}.` : "Loading…"}
+        description="Add only the material this agent may rely on. Sources are split, indexed and returned with every grounded search."
       />
+      {agent && <AgentNav agentId={agent.id} />}
       {id && <KnowledgeManager agentId={id} />}
     </PageShell>
   );

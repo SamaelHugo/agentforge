@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { ALL_TOOL_NAMES, ACCENT, toolMeta } from "@/lib/tools";
 import type { Agent } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { AgentNav } from "@/components/AgentNav";
 import {
   Button,
   Field,
@@ -29,6 +30,10 @@ const MODELS = [
 export function AgentBuilder({ agent }: { agent?: Agent }) {
   const router = useRouter();
   const isEdit = Boolean(agent);
+  const modelOptions =
+    agent?.model && !MODELS.includes(agent.model)
+      ? [agent.model, ...MODELS]
+      : MODELS;
 
   const [name, setName] = useState(agent?.name ?? "");
   const [description, setDescription] = useState(agent?.description ?? "");
@@ -99,11 +104,11 @@ export function AgentBuilder({ agent }: { agent?: Agent }) {
   };
 
   return (
-    <PageShell className="max-w-3xl">
+    <PageShell className="max-w-[1280px]">
       <PageHeader
-        eyebrow={isEdit ? "Agent Builder" : "New Agent"}
-        title={isEdit ? agent!.name : "Create an agent"}
-        description="Define its persona, give it tools, and connect a knowledge base."
+        eyebrow={isEdit ? "Agent / Configuration" : "Agent / New"}
+        title={isEdit ? agent!.name : "Create an agent."}
+        description="Define a clear role, choose the capabilities it may use and keep its operating limits explicit."
         actions={
           <Button variant="primary" onClick={save} loading={saving}>
             {saved ? <Check size={15} /> : <Save size={15} />}
@@ -112,163 +117,134 @@ export function AgentBuilder({ agent }: { agent?: Agent }) {
         }
       />
 
+      {isEdit && agent && <AgentNav agentId={agent.id} />}
+
       {error && (
-        <div className="mb-6 rounded-xl border border-accent-red/30 bg-accent-red/10 px-4 py-3 text-sm text-accent-red">
+        <div className="mb-8 border-l-2 border-accent-red bg-white px-4 py-3 text-sm text-accent-red">
           {error}
         </div>
       )}
 
-      <div className="space-y-8">
-        {/* Identity */}
-        <section className="space-y-4">
-          <Field label="Name">
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Lead Qualifier"
-            />
-          </Field>
-          <Field label="Description" hint="Shown on the agent card.">
-            <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="One line describing what this agent does."
-            />
-          </Field>
-        </section>
+      <div className="grid gap-14 lg:grid-cols-12">
+        <div className="space-y-12 lg:col-span-8">
+          <section className="grid gap-6 border-t border-line pt-5 sm:grid-cols-[150px_minmax(0,1fr)]">
+            <div>
+              <p className="micro-label">01 / Identity</p>
+              <p className="mt-3 text-xs leading-relaxed text-ink-muted">How the agent appears across the workspace.</p>
+            </div>
+            <div className="space-y-5">
+              <Field label="Name">
+                <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Lead Qualifier" />
+              </Field>
+              <Field label="Description" hint="One clear sentence shown throughout the product.">
+                <Input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="What outcome does this agent produce?" />
+              </Field>
+            </div>
+          </section>
 
-        {/* Instructions */}
-        <section>
-          <Field
-            label="System Prompt"
-            hint="The agent's instructions — how it should reason and behave."
-          >
-            <Textarea
-              value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
-              rows={8}
-              placeholder="You are a helpful assistant that…"
-            />
-          </Field>
-        </section>
+          <section className="grid gap-6 border-t border-line pt-5 sm:grid-cols-[150px_minmax(0,1fr)]">
+            <div>
+              <p className="micro-label">02 / Instructions</p>
+              <p className="mt-3 text-xs leading-relaxed text-ink-muted">The role, boundaries and decision rules it follows.</p>
+            </div>
+            <Field label="System prompt" hint="Be explicit about goals, evidence and when tools should be used.">
+              <Textarea value={systemPrompt} onChange={(event) => setSystemPrompt(event.target.value)} rows={11} placeholder="You are a specialist that…" />
+            </Field>
+          </section>
 
-        {/* Tools */}
-        <section>
-          <p className="micro-label mb-3">Tools</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {ALL_TOOL_NAMES.map((toolName) => {
-              const meta = toolMeta(toolName);
-              const accent = ACCENT[meta.accent];
-              const Icon = meta.icon;
-              const selected = tools.includes(toolName);
-              return (
-                <button
-                  key={toolName}
-                  type="button"
-                  onClick={() => toggleTool(toolName)}
-                  className={cn(
-                    "flex items-start gap-3 rounded-xl border p-4 text-left transition-all",
-                    selected
-                      ? cn(accent.bg, accent.border)
-                      : "border-line-soft bg-surface hover:bg-surface-raised",
-                  )}
-                >
-                  <span
+          <section className="grid gap-6 border-t border-line pt-5 sm:grid-cols-[150px_minmax(0,1fr)]">
+            <div>
+              <p className="micro-label">03 / Tools</p>
+              <p className="mt-3 text-xs leading-relaxed text-ink-muted">Only enable capabilities this agent genuinely needs.</p>
+            </div>
+            <div className="grid grid-cols-1 border-t border-line sm:grid-cols-2">
+              {ALL_TOOL_NAMES.map((toolName) => {
+                const meta = toolMeta(toolName);
+                const accent = ACCENT[meta.accent];
+                const Icon = meta.icon;
+                const selected = tools.includes(toolName);
+                return (
+                  <button
+                    key={toolName}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => toggleTool(toolName)}
                     className={cn(
-                      "mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg",
-                      selected ? cn(accent.bg, accent.text) : "bg-surface-raised text-ink-faint",
+                      "flex min-h-28 items-start gap-3 border-b border-line p-4 text-left transition-colors sm:odd:border-r",
+                      selected ? "bg-white" : "bg-transparent hover:bg-white/60",
                     )}
                   >
-                    <Icon size={16} />
-                  </span>
-                  <span className="min-w-0">
-                    <span
-                      className={cn(
-                        "block text-sm font-medium",
-                        selected ? "text-ink" : "text-ink-muted",
-                      )}
-                    >
-                      {meta.label}
+                    <span className={cn("mt-0.5 grid h-8 w-8 shrink-0 place-items-center border border-line bg-white", accent.text)}>
+                      <Icon size={15} />
                     </span>
-                    <span className="block text-xs leading-snug text-ink-faint">
-                      {meta.description}
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-ink">{meta.label}</span>
+                      <span className="mt-1 block text-xs leading-relaxed text-ink-muted">{meta.description}</span>
                     </span>
-                  </span>
-                  <span
-                    className={cn(
-                      "ml-auto grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-all",
-                      selected
-                        ? cn(accent.dot, "border-transparent text-bg")
-                        : "border-line",
-                    )}
-                  >
-                    {selected && <Check size={12} className="text-bg" />}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+                    <span className={cn("ml-auto grid h-5 w-5 shrink-0 place-items-center border", selected ? "border-brand bg-brand text-white" : "border-line bg-white")}>
+                      {selected && <Check size={12} />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
-        {/* Model & settings */}
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="Model">
-            <Select value={model} onChange={(e) => setModel(e.target.value)}>
-              {MODELS.map((m) => (
-                <option key={m} value={m} className="bg-bg">
-                  {m}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Max Tokens">
-            <Input
-              type="number"
-              value={maxTokens}
-              min={256}
-              max={8192}
-              onChange={(e) => setMaxTokens(Number(e.target.value))}
-            />
-          </Field>
-          <Field label="Effort" hint="Reasoning depth (Claude 4.6+).">
-            <Select value={effort} onChange={(e) => setEffort(e.target.value)}>
-              <option value="" className="bg-bg">default</option>
-              <option value="low" className="bg-bg">low</option>
-              <option value="medium" className="bg-bg">medium</option>
-              <option value="high" className="bg-bg">high</option>
-            </Select>
-          </Field>
-        </section>
+          <section className="grid gap-6 border-t border-line pt-5 sm:grid-cols-[150px_minmax(0,1fr)]">
+            <div>
+              <p className="micro-label">04 / Runtime</p>
+              <p className="mt-3 text-xs leading-relaxed text-ink-muted">Model choice and response limits.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <Field label="Model">
+                <Select value={model} onChange={(event) => setModel(event.target.value)}>
+                  {modelOptions.map((modelName) => <option key={modelName} value={modelName}>{modelName}</option>)}
+                </Select>
+              </Field>
+              <Field label="Max tokens">
+                <Input type="number" value={maxTokens} min={256} max={8192} onChange={(event) => setMaxTokens(Number(event.target.value))} />
+              </Field>
+              <Field label="Effort" hint="Claude 4.6+ only.">
+                <Select value={effort} onChange={(event) => setEffort(event.target.value)}>
+                  <option value="">default</option>
+                  <option value="low">low</option>
+                  <option value="medium">medium</option>
+                  <option value="high">high</option>
+                </Select>
+              </Field>
+            </div>
+          </section>
+        </div>
 
-        {/* Edit-only: quick links + danger zone */}
-        {isEdit && agent && (
-          <>
-            <section className="flex flex-wrap gap-3 border-t border-line-soft pt-6">
-              <LinkButton href={`/playground/${agent.id}`} variant="primary">
-                <Play size={15} />
-                Open in Playground
-              </LinkButton>
-              <LinkButton href={`/knowledge/${agent.id}`} variant="surface">
-                <FileText size={15} />
-                Knowledge Base ({agent.document_count})
-              </LinkButton>
-            </section>
-            <section className="rounded-xl border border-accent-red/20 bg-accent-red/[0.04] p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-ink">Delete agent</p>
-                  <p className="text-xs text-ink-muted">
-                    Permanently removes this agent, its documents, and run history.
-                  </p>
-                </div>
-                <Button variant="danger" onClick={remove}>
-                  <Trash2 size={15} />
-                  Delete
-                </Button>
+        <aside className="lg:col-span-4">
+          <div className="sticky top-10 border-t border-ink py-5">
+            <p className="micro-label">Live specification</p>
+            <h2 className="mt-8 font-editorial text-4xl leading-none text-ink">{name || "Untitled agent"}</h2>
+            <p className="mt-4 text-sm leading-relaxed text-ink-muted">{description || "Add a concise outcome-focused description."}</p>
+
+            <dl className="mt-10 divide-y divide-line border-y border-line text-xs">
+              <div className="flex justify-between gap-4 py-3"><dt className="text-ink-faint">Status</dt><dd className="font-medium uppercase tracking-[0.08em] text-ink">{agent?.status || "draft"}</dd></div>
+              <div className="flex justify-between gap-4 py-3"><dt className="text-ink-faint">Model</dt><dd className="max-w-[190px] truncate font-mono text-ink">{model}</dd></div>
+              <div className="flex justify-between gap-4 py-3"><dt className="text-ink-faint">Tools</dt><dd className="font-mono text-ink">{String(tools.length).padStart(2, "0")}</dd></div>
+              <div className="flex justify-between gap-4 py-3"><dt className="text-ink-faint">Token limit</dt><dd className="font-mono text-ink">{maxTokens.toLocaleString()}</dd></div>
+            </dl>
+
+            {isEdit && agent && (
+              <div className="mt-6 grid gap-2">
+                <LinkButton href={`/playground/${agent.id}`} variant="primary"><Play size={15} />Open Playground</LinkButton>
+                <LinkButton href={`/knowledge/${agent.id}`} variant="surface"><FileText size={15} />Knowledge ({agent.document_count})</LinkButton>
               </div>
-            </section>
-          </>
-        )}
+            )}
+
+            {isEdit && agent && (
+              <div className="mt-12 border-t border-accent-red/40 pt-4">
+                <p className="micro-label text-accent-red">Danger zone</p>
+                <p className="mt-3 text-xs leading-relaxed text-ink-muted">Deletes this agent, its documents and run history.</p>
+                <Button variant="danger" onClick={remove} className="mt-4"><Trash2 size={15} />Delete agent</Button>
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
     </PageShell>
   );

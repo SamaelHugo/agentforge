@@ -1,7 +1,7 @@
 "use client";
 
 import { FileText, Plus, Trash2, Upload, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "@/lib/api";
 import type { DocumentItem } from "@/lib/types";
@@ -17,16 +17,16 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
   const [content, setContent] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const load = () =>
-    api
+  const load = useCallback(() => {
+    return api
       .listDocuments(agentId)
       .then(setDocs)
-      .catch((e) => setError(String(e)));
+      .catch((loadError) => setError(String(loadError)));
+  }, [agentId]);
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agentId]);
+  }, [load]);
 
   const onUpload = async (file: File) => {
     setBusy(true);
@@ -71,7 +71,7 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-xl border border-accent-red/30 bg-accent-red/10 px-4 py-3 text-sm text-accent-red">
+        <div className="border-l-2 border-accent-red bg-white px-4 py-3 text-sm text-accent-red">
           {error}
         </div>
       )}
@@ -100,7 +100,12 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
       </div>
 
       {showText && (
-        <div className="surface space-y-4 rounded-card p-5">
+        <div className="grid gap-6 border-y border-line bg-white p-5 sm:grid-cols-[180px_minmax(0,1fr)] sm:p-7">
+          <div>
+            <p className="micro-label">Manual source</p>
+            <p className="mt-3 text-xs leading-relaxed text-ink-muted">Paste reliable source material and give it a title the agent can cite.</p>
+          </div>
+          <div className="space-y-4">
           <Field label="Title">
             <Input
               value={filename}
@@ -119,6 +124,7 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
           <Button variant="primary" onClick={onAddText} loading={busy}>
             Add to knowledge base
           </Button>
+          </div>
         </div>
       )}
 
@@ -136,25 +142,23 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
           description="Upload a PDF or paste text. It's chunked, embedded, and made searchable for this agent's RAG tool."
         />
       ) : (
-        <div className="space-y-3">
+        <div className="border-t border-line">
           {docs.map((doc) => (
             <div
               key={doc.id}
-              className="surface flex items-center gap-4 rounded-xl px-5 py-4"
+              className="grid gap-4 border-b border-line py-5 sm:grid-cols-[40px_minmax(0,1fr)_120px_40px] sm:items-center"
             >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent-cyan/10 text-accent-cyan">
-                <FileText size={18} />
+              <span className="grid h-9 w-9 shrink-0 place-items-center border border-line bg-white text-brand">
+                <FileText size={16} />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-ink">{doc.filename}</p>
-                <p className="text-xs text-ink-muted">
-                  {doc.chunk_count} chunks · {formatBytes(doc.size)} ·{" "}
-                  {timeAgo(doc.created_at)}
-                </p>
+                <p className="mt-1 text-xs text-ink-muted">{formatBytes(doc.size)} · added {timeAgo(doc.created_at)}</p>
               </div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-faint">{doc.chunk_count} chunks</p>
               <button
                 onClick={() => onDelete(doc.id)}
-                className="grid h-8 w-8 place-items-center rounded-lg text-ink-faint transition-colors hover:bg-accent-red/10 hover:text-accent-red"
+                className="grid h-8 w-8 place-items-center text-ink-faint transition-colors hover:text-accent-red"
                 aria-label="Delete document"
               >
                 <Trash2 size={15} />

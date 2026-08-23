@@ -5,9 +5,9 @@ export default function PlaygroundIndexPage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="Playground"
-        title="Pick an agent to run"
-        description="Open the split-view playground — chat on the left, the agent's live reasoning, tool calls, and results on the right."
+        eyebrow="02 / Playground"
+        title="Put an agent to work."
+        description="Choose an agent, give it a real task and inspect the execution trace only when you need the technical detail."
       />
       <AgentPicker basePath="/playground" />
     </PageShell>

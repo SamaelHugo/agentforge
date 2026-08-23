@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 function CodeBlock({ children }: { children: string }) {
   return (
-    <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-line-soft bg-bg p-3 font-mono text-[12px] leading-relaxed text-ink-muted">
+    <pre className="mt-3 max-h-64 overflow-auto border border-line bg-surface p-3 font-mono text-[11px] leading-relaxed text-ink-muted">
       {children}
     </pre>
   );
@@ -38,13 +38,13 @@ function StepShell({
       <div className="flex flex-col items-center pt-1">
         <span
           className={cn(
-            "grid h-6 w-6 shrink-0 place-items-center rounded-full",
+            "grid h-6 w-6 shrink-0 place-items-center border border-line bg-white",
             dotClass,
           )}
         >
           {icon}
         </span>
-        {!last && <span className="mt-1 w-px flex-1 bg-line" />}
+        {!last && <span className="w-px flex-1 bg-line" />}
       </div>
       <div className="min-w-0 flex-1 pb-5">
         <p className={cn("mb-1 text-[11px] font-semibold uppercase tracking-[0.18em]", labelClass)}>
@@ -63,7 +63,7 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
     return (
       <StepShell
         last={last}
-        dotClass="bg-surface-raised text-ink-muted"
+        dotClass="text-ink-muted"
         icon={<Brain size={13} />}
         label="Thinking"
         labelClass="text-ink-faint"
@@ -83,7 +83,7 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
     return (
       <StepShell
         last={last}
-        dotClass={cn(accent.bg, accent.text)}
+        dotClass={accent.text}
         icon={<Icon size={13} />}
         label="Tool Call"
         labelClass={accent.text}
@@ -116,7 +116,7 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
             {data.hits.map((hit, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-accent-cyan/20 bg-accent-cyan/10 p-2.5"
+                className="border-l-2 border-accent-cyan bg-surface px-3 py-2.5"
               >
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 truncate text-xs text-accent-cyan">
@@ -138,7 +138,7 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
             {data.results.map((result, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-accent-amber/20 bg-accent-amber/10 p-2.5"
+                className="border-l-2 border-accent-amber bg-surface px-3 py-2.5"
               >
                 <p className="text-[13px] font-medium text-ink">{result.title}</p>
                 <p className="truncate text-[11px] text-accent-amber">{result.url}</p>

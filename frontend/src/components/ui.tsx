@@ -19,7 +19,7 @@ export function PageShell({
   className?: string;
 }) {
   return (
-    <div className={cn("mx-auto w-full max-w-6xl px-8 py-10", className)}>
+    <div className={cn("mx-auto w-full max-w-[1440px] px-5 py-8 sm:px-8 md:px-10 md:py-12 xl:px-14", className)}>
       {children}
     </div>
   );
@@ -37,20 +37,20 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-      <div className="max-w-2xl">
-        {eyebrow && <p className="micro-label mb-3">{eyebrow}</p>}
-        <h1 className="font-display text-4xl font-semibold leading-[1.05] tracking-tight text-ink">
+    <header className="mb-12 grid gap-8 border-b border-line pb-8 lg:grid-cols-12 lg:items-end">
+      <div className="lg:col-span-8">
+        {eyebrow && <p className="micro-label mb-5">{eyebrow}</p>}
+        <h1 className="font-editorial text-5xl font-medium leading-[0.92] tracking-[-0.035em] text-ink sm:text-6xl">
           {title}
         </h1>
         {description && (
-          <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">
+          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-ink-muted">
             {description}
           </p>
         )}
       </div>
-      {actions && <div className="flex items-center gap-3">{actions}</div>}
-    </div>
+      {actions && <div className="flex items-center gap-3 lg:col-span-4 lg:justify-end">{actions}</div>}
+    </header>
   );
 }
 
@@ -59,9 +59,8 @@ type Variant = "primary" | "surface" | "ghost" | "danger";
 type Size = "sm" | "md";
 
 const VARIANTS: Record<Variant, string> = {
-  // Raycast's primary action is plain white — brand red stays a signal, never a CTA.
-  primary: "bg-white text-bg hover:bg-white/90",
-  surface: "surface text-ink hover:bg-surface-raised",
+  primary: "border border-ink bg-ink text-white hover:bg-brand hover:border-brand",
+  surface: "border border-line bg-white text-ink hover:border-ink",
   ghost: "text-ink-muted hover:bg-surface-raised hover:text-ink",
   danger: "border border-accent-red/25 bg-accent-red/15 text-accent-red hover:bg-accent-red/25",
 };
@@ -86,7 +85,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-[2px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
         VARIANTS[variant],
         SIZES[size],
         className,
@@ -117,7 +116,7 @@ export function LinkButton({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all",
+        "inline-flex items-center justify-center gap-2 rounded-[2px] font-medium transition-colors",
         VARIANTS[variant],
         SIZES[size],
         className,
@@ -151,7 +150,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "field w-full rounded-lg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint",
+        "field w-full rounded-[2px] px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint",
         className,
       )}
       {...props}
@@ -166,7 +165,7 @@ export function Textarea({
   return (
     <textarea
       className={cn(
-        "field w-full rounded-lg px-3.5 py-2.5 text-sm leading-relaxed text-ink placeholder:text-ink-faint",
+        "field w-full rounded-[2px] px-3.5 py-2.5 text-sm leading-relaxed text-ink placeholder:text-ink-faint",
         className,
       )}
       {...props}
@@ -182,7 +181,7 @@ export function Select({
   return (
     <select
       className={cn(
-        "field w-full rounded-lg px-3.5 py-2.5 text-sm text-ink",
+        "field w-full rounded-[2px] px-3.5 py-2.5 text-sm text-ink",
         className,
       )}
       {...props}
@@ -208,7 +207,7 @@ export function StatusDot({ status }: { status: string }) {
         className={cn(
           "absolute inline-flex h-full w-full rounded-full opacity-60",
           STATUS_COLOR[status] ?? "bg-ink-faint",
-          (status === "running" || status === "active") && "animate-ping",
+          status === "running" && "animate-ping",
         )}
       />
       <span
@@ -231,7 +230,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs text-ink-muted",
+        "inline-flex items-center gap-1.5 rounded-[2px] border border-line bg-surface px-2 py-1 text-[11px] uppercase tracking-[0.08em] text-ink-muted",
         className,
       )}
     >
@@ -241,7 +240,7 @@ export function Badge({
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("skeleton rounded-xl", className)} />;
+  return <div className={cn("skeleton rounded-[2px]", className)} />;
 }
 
 export function Spinner({ className }: { className?: string }) {
@@ -260,13 +259,13 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="surface-soft flex flex-col items-center justify-center rounded-card px-8 py-16 text-center">
-      <span className="mb-4 grid h-12 w-12 place-items-center rounded-full bg-surface-raised text-ink-muted">
+    <div className="flex min-h-72 flex-col items-start justify-end border-y border-line px-1 py-10 text-left sm:px-0 sm:py-14">
+      <span className="mb-8 grid h-10 w-10 place-items-center border border-line bg-white text-brand">
         <Icon size={22} />
       </span>
-      <h3 className="font-display text-lg font-medium text-ink">{title}</h3>
+      <h3 className="font-editorial text-3xl font-medium text-ink">{title}</h3>
       {description && (
-        <p className="mt-2 max-w-sm text-sm text-ink-muted">{description}</p>
+        <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-muted">{description}</p>
       )}
       {action && <div className="mt-6">{action}</div>}
     </div>

@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { EB_Garamond, Inter_Tight, JetBrains_Mono } from "next/font/google";
 
 import { Sidebar } from "@/components/Sidebar";
 import "./globals.css";
 
-/* Raycast is a single-typeface system: one neutral grotesk everywhere,
-   a mono reserved for code, IDs and the execution trace. No serif. */
-const inter = Inter({
+const helvetica = Inter_Tight({
   subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-helvetica",
+  display: "swap",
+});
+
+const garamond = EB_Garamond({
+  subsets: ["latin"],
+  variable: "--font-garamond",
   display: "swap",
 });
 
@@ -32,9 +35,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${mono.variable} font-sans antialiased`}
+        className={`${helvetica.variable} ${garamond.variable} ${mono.variable} font-sans antialiased`}
       >
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen flex-col md:flex-row">
           <Sidebar />
           <main className="flex-1 min-w-0">{children}</main>
         </div>

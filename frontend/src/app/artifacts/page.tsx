@@ -5,9 +5,9 @@ export default function ArtifactsIndexPage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="Artifacts"
-        title="Saved agent output"
-        description="Inspect records, reports, and notes created through the save_to_db tool."
+        eyebrow="05 / Artifact archive"
+        title="Work worth keeping."
+        description="Choose an agent to inspect the reports, records and structured outputs it has saved for later use."
       />
       <AgentPicker basePath="/artifacts" />
     </PageShell>

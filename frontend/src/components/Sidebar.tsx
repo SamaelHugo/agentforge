@@ -1,15 +1,8 @@
 "use client";
 
 import {
-  Boxes,
-  Database,
-  FileText,
-  History,
   KeyRound,
   LogOut,
-  type LucideIcon,
-  Sparkles,
-  SquareTerminal,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,7 +19,7 @@ import { cn } from "@/lib/utils";
 interface NavItem {
   href: string;
   label: string;
-  icon: LucideIcon;
+  index: string;
   match: (path: string) => boolean;
 }
 
@@ -34,31 +27,31 @@ const NAV: NavItem[] = [
   {
     href: "/",
     label: "Agents",
-    icon: Boxes,
+    index: "01",
     match: (p) => p === "/" || p.startsWith("/agents"),
   },
   {
     href: "/playground",
     label: "Playground",
-    icon: SquareTerminal,
+    index: "02",
     match: (p) => p.startsWith("/playground"),
   },
   {
     href: "/knowledge",
     label: "Knowledge Base",
-    icon: FileText,
+    index: "03",
     match: (p) => p.startsWith("/knowledge"),
   },
   {
     href: "/runs",
     label: "Runs",
-    icon: History,
+    index: "04",
     match: (p) => p.startsWith("/runs"),
   },
   {
     href: "/artifacts",
     label: "Artifacts",
-    icon: Database,
+    index: "05",
     match: (p) => p.startsWith("/artifacts"),
   },
 ];
@@ -134,48 +127,42 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="sticky top-0 flex h-screen w-[248px] shrink-0 flex-col gap-2 border-r border-line bg-surface p-5">
-      <Link href="/" className="mb-6 flex items-center gap-3 px-2">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand/15 text-brand ring-1 ring-brand/25">
-          <Sparkles size={18} />
+    <aside className="sticky top-0 z-30 flex w-full shrink-0 flex-col border-b border-line bg-surface/95 px-5 py-4 md:h-screen md:w-[232px] md:border-b-0 md:border-r md:px-6 md:py-7">
+      <Link href="/" className="flex items-center gap-3 md:mb-14">
+        <span className="grid h-9 w-9 place-items-center bg-brand font-display text-[11px] font-semibold tracking-[-0.04em] text-white">
+          AF
         </span>
-        <span className="font-display text-xl font-semibold tracking-tight">
-          AgentForge
+        <span className="leading-none">
+          <span className="block font-display text-base font-semibold tracking-[-0.035em]">AgentForge</span>
+          <span className="mt-1 block text-[9px] uppercase tracking-[0.17em] text-ink-faint">AI operations</span>
         </span>
       </Link>
 
-      <nav className="flex flex-col gap-1">
+      <nav className="mt-4 flex gap-1 overflow-x-auto md:mt-0 md:flex-col md:gap-0">
         {NAV.map((item) => {
           const active = item.match(pathname);
-          const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
+                "group flex shrink-0 items-center gap-3 border-t px-1 py-3 text-sm transition-colors md:w-full",
                 active
-                  ? "surface text-ink"
-                  : "text-ink-muted hover:bg-surface-raised hover:text-ink",
+                  ? "border-ink text-ink"
+                  : "border-line-soft text-ink-muted hover:border-line hover:text-ink",
               )}
             >
-              <Icon
-                size={17}
-                className={cn(
-                  "transition-colors",
-                  active ? "text-accent-cyan" : "text-ink-faint group-hover:text-ink-muted",
-                )}
-              />
-              <span className="font-medium">{item.label}</span>
+              <span className={cn("font-mono text-[9px]", active ? "text-brand" : "text-ink-faint")}>{item.index}</span>
+              <span className="font-medium tracking-[-0.01em]">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="mt-auto space-y-2 px-2">
+      <div className="mt-auto hidden space-y-4 md:block">
         {authRequired &&
           (hasToken ? (
-            <div className="flex items-center gap-2 rounded-xl border border-accent-green/20 bg-accent-green/[0.06] px-3 py-2.5">
+            <div className="flex items-center gap-2 border-t border-line pt-4">
               <KeyRound size={14} className="text-accent-green" />
               <div className="min-w-0 flex-1 leading-tight">
                 <p className="micro-label">Access</p>
@@ -184,7 +171,7 @@ export function Sidebar() {
               <button
                 type="button"
                 onClick={clearToken}
-                className="grid h-7 w-7 place-items-center rounded-lg text-ink-faint transition-colors hover:bg-surface-raised hover:text-ink"
+                className="grid h-7 w-7 place-items-center text-ink-faint transition-colors hover:text-ink"
                 aria-label="Clear access token"
                 title="Clear access token"
               >
@@ -194,7 +181,7 @@ export function Sidebar() {
           ) : (
             <form
               onSubmit={unlock}
-              className="rounded-xl border border-accent-amber/20 bg-accent-amber/[0.05] p-3"
+              className="border-t border-line pt-4"
             >
               <label
                 htmlFor="agentforge-access-token"
@@ -211,12 +198,12 @@ export function Sidebar() {
                   onChange={(event) => setTokenInput(event.target.value)}
                   placeholder="Required"
                   autoComplete="current-password"
-                  className="field min-w-0 flex-1 rounded-lg px-2.5 py-1.5 text-xs text-ink placeholder:text-ink-faint"
+                  className="field min-w-0 flex-1 rounded-[2px] px-2.5 py-1.5 text-xs text-ink placeholder:text-ink-faint"
                 />
                 <button
                   type="submit"
                   disabled={authBusy || !tokenInput.trim()}
-                  className="rounded-lg bg-white px-2.5 py-1.5 text-xs font-medium text-bg disabled:opacity-40"
+                  className="rounded-[2px] bg-ink px-2.5 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                 >
                   {authBusy ? "…" : "Unlock"}
                 </button>
@@ -226,7 +213,7 @@ export function Sidebar() {
               )}
             </form>
           ))}
-        <div className="flex items-center gap-2 rounded-xl border border-line-soft bg-surface px-3 py-2.5">
+        <div className="flex items-center gap-2 border-t border-line pt-4">
           <span
             className={cn("h-2 w-2 rounded-full", engine.dot)}
           />

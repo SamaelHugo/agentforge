@@ -5,9 +5,9 @@ export default function KnowledgeIndexPage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="Knowledge Base"
-        title="Manage an agent's documents"
-        description="Upload PDFs or paste text. Documents are chunked, embedded, and made searchable for the agent's RAG tool."
+        eyebrow="03 / Knowledge library"
+        title="Ground agents in facts."
+        description="Choose an agent, then add the documents it can search before answering. Every source stays visible and manageable."
       />
       <AgentPicker basePath="/knowledge" />
     </PageShell>

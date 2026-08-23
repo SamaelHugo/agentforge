@@ -1,7 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Boxes, ChevronRight } from "lucide-react";
+import { ArrowUpRight, Boxes } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -33,9 +32,9 @@ export function AgentPicker({ basePath }: { basePath: string }) {
 
   if (agents === null) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-36" />
+          <Skeleton key={i} className="h-24" />
         ))}
       </div>
     );
@@ -57,41 +56,39 @@ export function AgentPicker({ basePath }: { basePath: string }) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="border-t border-line">
       {agents.map((agent, i) => (
-        <motion.div
+        <Link
           key={agent.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+          href={`${basePath}/${agent.id}`}
+          className="group grid gap-4 border-b border-line py-6 transition-colors hover:bg-white/60 sm:grid-cols-[40px_minmax(0,1fr)_auto] sm:items-center"
         >
-          <Link
-            href={`${basePath}/${agent.id}`}
-            className="surface group flex h-full flex-col rounded-t-card rounded-b-xl p-5 transition-all hover:bg-surface-raised"
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <StatusDot status={agent.status} />
-                <span className="micro-label">{agent.status}</span>
-              </span>
-              <ChevronRight
-                size={16}
-                className="text-ink-faint transition-transform group-hover:translate-x-1 group-hover:text-accent-cyan"
-              />
-            </div>
-            <h3 className="font-display text-lg font-semibold tracking-tight text-ink group-hover:text-accent-cyan">
+          <span className="font-mono text-[10px] text-ink-faint">
+            {String(i + 1).padStart(2, "0")}
+          </span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <StatusDot status={agent.status} />
+              <h3 className="font-display text-lg font-semibold tracking-[-0.03em] text-ink group-hover:text-brand">
               {agent.name}
-            </h3>
+              </h3>
+            </div>
             <p className="mt-1 line-clamp-2 text-sm text-ink-muted">
               {agent.description || "No description."}
             </p>
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <div className="mt-3 flex flex-wrap gap-1.5 sm:hidden">
               {agent.tools.map((t) => (
                 <ToolPill key={t} name={t} />
               ))}
             </div>
-          </Link>
-        </motion.div>
+          </div>
+          <div className="hidden items-center gap-5 sm:flex">
+            <div className="flex max-w-[360px] flex-wrap justify-end gap-1.5">
+              {agent.tools.slice(0, 3).map((tool) => <ToolPill key={tool} name={tool} />)}
+            </div>
+            <ArrowUpRight size={17} className="text-ink-faint transition-colors group-hover:text-brand" />
+          </div>
+        </Link>
       ))}
     </div>
   );

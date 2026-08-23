@@ -14,14 +14,11 @@ export function ToolPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
-        accent.bg,
-        accent.border,
-        accent.text,
+        "inline-flex items-center gap-1.5 rounded-[2px] border border-line bg-white px-2 py-1 text-[10px] font-medium uppercase tracking-[0.08em] text-ink-muted",
         className,
       )}
     >
-      <Icon size={12} />
+      <Icon size={11} className={accent.text} />
       {meta.label}
     </span>
   );

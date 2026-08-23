@@ -63,9 +63,7 @@ export function toolMeta(name: string): ToolMeta {
   );
 }
 
-/** Static accent → Tailwind class sets (kept literal so JIT picks them up).
- *  Raycast pairs every semantic colour with a ~15%-alpha soft fill and uses
- *  no glow whatsoever — the colour itself is the signal. */
+/** Static semantic accents. Colour communicates tool/result type, not depth. */
 export const ACCENT: Record<
   Accent,
   { text: string; bg: string; border: string; dot: string }
