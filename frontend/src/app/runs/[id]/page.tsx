@@ -1,26 +1,70 @@
 "use client";
 
-import { ArrowLeft, ChevronRight, History } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ChevronRight, History } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { EmptyState, LinkButton, PageHeader, PageShell, Skeleton, StatusDot } from "@/components/ui";
+import {
+  Button,
+  EmptyState,
+  LinkButton,
+  PageHeader,
+  PageShell,
+  Skeleton,
+  StatusDot,
+} from "@/components/ui";
 import { AgentNav } from "@/components/AgentNav";
 import { api } from "@/lib/api";
 import type { Agent, Run } from "@/lib/types";
-import { timeAgo } from "@/lib/utils";
+import { errorMessage, timeAgo } from "@/lib/utils";
 
 export default function RunHistoryPage() {
   const { id } = useParams<{ id: string }>();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [runs, setRuns] = useState<Run[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    if (!id) return;
+    Promise.all([api.getAgent(id), api.listRuns(id)])
+      .then(([agentResult, runResults]) => {
+        setAgent(agentResult);
+        setRuns(runResults);
+      })
+      .catch((loadError) => setError(errorMessage(loadError)));
+  }, [id]);
+
+  const retry = () => {
+    setAgent(null);
+    setRuns(null);
+    setError(null);
+    load();
+  };
 
   useEffect(() => {
-    if (!id) return;
-    api.getAgent(id).then(setAgent).catch(() => setAgent(null));
-    api.listRuns(id).then(setRuns).catch(() => setRuns([]));
-  }, [id]);
+    load();
+  }, [load]);
+
+  if (error) {
+    return (
+      <PageShell>
+        <Link
+          href="/runs"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-ink-muted transition-colors hover:text-ink"
+        >
+          <ArrowLeft size={15} />
+          All agents
+        </Link>
+        <EmptyState
+          icon={AlertTriangle}
+          title="Run history unavailable"
+          description={error}
+          action={<Button onClick={retry}>Try again</Button>}
+        />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell>

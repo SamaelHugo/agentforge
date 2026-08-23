@@ -1,11 +1,12 @@
 "use client";
 
 import { Boxes, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { AgentCard } from "@/components/AgentCard";
 import {
   EmptyState,
+  Button,
   LinkButton,
   PageHeader,
   PageShell,
@@ -13,17 +14,28 @@ import {
 } from "@/components/ui";
 import { api } from "@/lib/api";
 import type { Agent } from "@/lib/types";
+import { errorMessage } from "@/lib/utils";
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     api
       .listAgents()
       .then(setAgents)
-      .catch((e) => setError(String(e)));
+      .catch((e) => setError(errorMessage(e)));
   }, []);
+
+  const retry = () => {
+    setAgents(null);
+    setError(null);
+    load();
+  };
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const totalRuns = agents?.reduce((sum, agent) => sum + agent.run_count, 0) ?? 0;
   const totalDocuments =
@@ -68,6 +80,7 @@ export default function AgentsPage() {
           icon={Boxes}
           title="Couldn't reach the backend"
           description={`${error} — is the API running on the configured URL?`}
+          action={<Button onClick={retry}>Try again</Button>}
         />
       )}
 

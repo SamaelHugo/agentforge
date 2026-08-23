@@ -2,23 +2,40 @@
 
 import { ArrowUpRight, Boxes } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
 import type { Agent } from "@/lib/types";
 import { ToolPill } from "@/components/ToolPill";
-import { EmptyState, LinkButton, Skeleton, StatusDot } from "@/components/ui";
+import {
+  Button,
+  EmptyState,
+  LinkButton,
+  Skeleton,
+  StatusDot,
+} from "@/components/ui";
+import { errorMessage } from "@/lib/utils";
 
 export function AgentPicker({ basePath }: { basePath: string }) {
   const [agents, setAgents] = useState<Agent[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     api
       .listAgents()
       .then(setAgents)
-      .catch((e) => setError(String(e)));
+      .catch((e) => setError(errorMessage(e)));
   }, []);
+
+  const retry = () => {
+    setAgents(null);
+    setError(null);
+    load();
+  };
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (error) {
     return (
@@ -26,6 +43,7 @@ export function AgentPicker({ basePath }: { basePath: string }) {
         icon={Boxes}
         title="Couldn't reach the backend"
         description={error}
+        action={<Button onClick={retry}>Try again</Button>}
       />
     );
   }

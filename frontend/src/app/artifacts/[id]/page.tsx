@@ -1,12 +1,13 @@
 "use client";
 
-import { ArrowLeft, Database, ExternalLink } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Database, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   Badge,
+  Button,
   EmptyState,
   LinkButton,
   PageHeader,
@@ -16,22 +17,54 @@ import {
 import { AgentNav } from "@/components/AgentNav";
 import { api } from "@/lib/api";
 import type { Agent, Artifact } from "@/lib/types";
-import { timeAgo } from "@/lib/utils";
+import { errorMessage, timeAgo } from "@/lib/utils";
 
 export default function ArtifactsPage() {
   const { id } = useParams<{ id: string }>();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [artifacts, setArtifacts] = useState<Artifact[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!id) return;
     Promise.all([api.getAgent(id), api.listArtifacts(id)])
       .then(([agentResult, artifactResults]) => {
         setAgent(agentResult);
         setArtifacts(artifactResults);
       })
-      .catch(() => setArtifacts([]));
+      .catch((loadError) => setError(errorMessage(loadError)));
   }, [id]);
+
+  const retry = () => {
+    setAgent(null);
+    setArtifacts(null);
+    setError(null);
+    load();
+  };
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (error) {
+    return (
+      <PageShell>
+        <Link
+          href="/artifacts"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-ink-muted transition-colors hover:text-ink"
+        >
+          <ArrowLeft size={15} />
+          All agents
+        </Link>
+        <EmptyState
+          icon={AlertTriangle}
+          title="Artifacts unavailable"
+          description={error}
+          action={<Button onClick={retry}>Try again</Button>}
+        />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell>

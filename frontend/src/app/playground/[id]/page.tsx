@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, PanelRightClose, PanelRightOpen, Settings2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, PanelRightClose, PanelRightOpen, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -8,10 +8,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatPanel, type ChatMessage } from "@/components/chat/ChatPanel";
 import { TracePanel } from "@/components/trace/TracePanel";
 import { ToolPill } from "@/components/ToolPill";
-import { Spinner } from "@/components/ui";
+import { Button, EmptyState, Spinner } from "@/components/ui";
 import { api } from "@/lib/api";
 import { streamRun } from "@/lib/sse";
 import type { Agent, ConversationTurn, TraceEvent } from "@/lib/types";
+import { errorMessage } from "@/lib/utils";
 
 type Status = "idle" | "running" | "completed" | "error";
 
@@ -64,6 +65,7 @@ function successfulHistory(messages: ChatMessage[]): ConversationTurn[] {
 export default function PlaygroundPage() {
   const { id } = useParams<{ id: string }>();
   const [agent, setAgent] = useState<Agent | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [events, setEvents] = useState<TraceEvent[]>([]);
   const [status, setStatus] = useState<Status>("idle");
@@ -71,10 +73,21 @@ export default function PlaygroundPage() {
   const abortRef = useRef<AbortController | null>(null);
   const finalRef = useRef("");
 
-  useEffect(() => {
-    if (id) api.getAgent(id).then(setAgent).catch(() => setAgent(null));
-    return () => abortRef.current?.abort();
+  const loadAgent = useCallback(() => {
+    if (!id) return;
+    api.getAgent(id).then(setAgent).catch((error) => setLoadError(errorMessage(error)));
   }, [id]);
+
+  const retryLoadAgent = () => {
+    setAgent(null);
+    setLoadError(null);
+    loadAgent();
+  };
+
+  useEffect(() => {
+    loadAgent();
+    return () => abortRef.current?.abort();
+  }, [loadAgent]);
 
   const send = useCallback(
     async (text: string) => {
@@ -131,13 +144,26 @@ export default function PlaygroundPage() {
         }
         setMessages((m) => [
           ...m,
-          { role: "assistant", text: String(err), error: true },
+          { role: "assistant", text: errorMessage(err), error: true },
         ]);
         setStatus("error");
       }
     },
     [id, messages, status],
   );
+
+  if (loadError) {
+    return (
+      <div className="mx-auto flex min-h-[calc(100vh-126px)] max-w-4xl items-center px-5 md:min-h-screen md:px-10">
+        <EmptyState
+          icon={AlertTriangle}
+          title="Playground unavailable"
+          description={loadError}
+          action={<Button onClick={retryLoadAgent}>Try again</Button>}
+        />
+      </div>
+    );
+  }
 
   if (!agent) {
     return (

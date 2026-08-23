@@ -2,30 +2,46 @@
 
 import { Boxes } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { AgentBuilder } from "@/components/AgentBuilder";
-import { EmptyState, PageShell, Skeleton } from "@/components/ui";
+import { Button, EmptyState, PageShell, Skeleton } from "@/components/ui";
 import { api } from "@/lib/api";
 import type { Agent } from "@/lib/types";
+import { errorMessage } from "@/lib/utils";
 
 export default function EditAgentPage() {
   const { id } = useParams<{ id: string }>();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!id) return;
     api
       .getAgent(id)
       .then(setAgent)
-      .catch((e) => setError(String(e)));
+      .catch((e) => setError(errorMessage(e)));
   }, [id]);
+
+  const retry = () => {
+    setAgent(null);
+    setError(null);
+    load();
+  };
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (error) {
     return (
       <PageShell>
-        <EmptyState icon={Boxes} title="Agent not found" description={error} />
+        <EmptyState
+          icon={Boxes}
+          title="Agent not found"
+          description={error}
+          action={<Button onClick={retry}>Try again</Button>}
+        />
       </PageShell>
     );
   }

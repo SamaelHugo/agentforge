@@ -1,23 +1,42 @@
 "use client";
 
-import { ArrowLeft, BrainCircuit } from "lucide-react";
+import { AlertTriangle, ArrowLeft, BrainCircuit } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { TraceStep } from "@/components/trace/TraceStep";
-import { PageHeader, PageShell, Skeleton, StatusDot } from "@/components/ui";
+import {
+  Button,
+  EmptyState,
+  PageHeader,
+  PageShell,
+  Skeleton,
+  StatusDot,
+} from "@/components/ui";
 import { api } from "@/lib/api";
 import type { RunDetail, TraceEvent } from "@/lib/types";
-import { parseDate } from "@/lib/utils";
+import { errorMessage, parseDate } from "@/lib/utils";
 
 export default function RunReplayPage() {
   const { id, runId } = useParams<{ id: string; runId: string }>();
   const [run, setRun] = useState<RunDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    if (!runId) return;
+    api.getRun(runId).then(setRun).catch((loadError) => setError(errorMessage(loadError)));
+  }, [runId]);
+
+  const retry = () => {
+    setRun(null);
+    setError(null);
+    load();
+  };
 
   useEffect(() => {
-    if (runId) api.getRun(runId).then(setRun).catch(() => setRun(null));
-  }, [runId]);
+    load();
+  }, [load]);
 
   const steps: TraceEvent[] =
     run?.steps
@@ -34,7 +53,14 @@ export default function RunReplayPage() {
         Run history
       </Link>
 
-      {!run ? (
+      {error ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title="Run unavailable"
+          description={error}
+          action={<Button onClick={retry}>Try again</Button>}
+        />
+      ) : !run ? (
         <Skeleton className="h-64" />
       ) : (
         <>

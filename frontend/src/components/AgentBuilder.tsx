@@ -7,7 +7,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { ALL_TOOL_NAMES, ACCENT, toolMeta } from "@/lib/tools";
 import type { Agent } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, errorMessage } from "@/lib/utils";
 import { AgentNav } from "@/components/AgentNav";
 import {
   Button,
@@ -49,6 +49,8 @@ export function AgentBuilder({ agent }: { agent?: Agent }) {
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const toggleTool = (toolName: string) => {
@@ -86,7 +88,7 @@ export function AgentBuilder({ agent }: { agent?: Agent }) {
         router.push(`/agents/${created.id}`);
       }
     } catch (e) {
-      setError(String(e));
+      setError(errorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -94,12 +96,14 @@ export function AgentBuilder({ agent }: { agent?: Agent }) {
 
   const remove = async () => {
     if (!agent) return;
-    if (!confirm(`Delete "${agent.name}"? This removes its documents and runs.`)) return;
+    setDeleting(true);
+    setError(null);
     try {
       await api.deleteAgent(agent.id);
       router.push("/");
     } catch (e) {
-      setError(String(e));
+      setError(errorMessage(e));
+      setDeleting(false);
     }
   };
 
@@ -120,10 +124,14 @@ export function AgentBuilder({ agent }: { agent?: Agent }) {
       {isEdit && agent && <AgentNav agentId={agent.id} />}
 
       {error && (
-        <div className="mb-8 border-l-2 border-accent-red bg-white px-4 py-3 text-sm text-accent-red">
+        <div role="alert" className="mb-8 border border-accent-red/40 bg-white px-4 py-3 text-sm text-accent-red">
           {error}
         </div>
       )}
+
+      <span className="sr-only" role="status" aria-live="polite">
+        {saved ? "Agent saved." : ""}
+      </span>
 
       <div className="grid gap-14 lg:grid-cols-12">
         <div className="space-y-12 lg:col-span-8">
@@ -240,7 +248,24 @@ export function AgentBuilder({ agent }: { agent?: Agent }) {
               <div className="mt-12 border-t border-accent-red/40 pt-4">
                 <p className="micro-label text-accent-red">Danger zone</p>
                 <p className="mt-3 text-xs leading-relaxed text-ink-muted">Deletes this agent, its documents and run history.</p>
-                <Button variant="danger" onClick={remove} className="mt-4"><Trash2 size={15} />Delete agent</Button>
+                {confirmDelete ? (
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <Button variant="danger" onClick={remove} loading={deleting}>
+                      <Trash2 size={15} />Confirm delete
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setConfirmDelete(false)}
+                      disabled={deleting}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <Button variant="danger" onClick={() => setConfirmDelete(true)} className="mt-4">
+                    <Trash2 size={15} />Delete agent
+                  </Button>
+                )}
               </div>
             )}
           </div>

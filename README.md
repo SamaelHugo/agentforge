@@ -22,7 +22,7 @@ The agent loop is a **custom ReAct engine written from scratch (~150 lines) — 
 - **Pluggable LLM providers** — Groq, Gemini, and OpenAI through their OpenAI-compatible endpoints, plus native Anthropic Claude and a deterministic offline mock; selected automatically from your environment.
 - **Tool use with real side effects** — `search_knowledge` (RAG), `draft_email`, `save_to_db` (persists artifacts), and live `web_search` through Tavily when configured.
 - **In-session conversation context** — the Playground sends up to 20 recent user/assistant turns so follow-up questions keep their context without unbounded prompts.
-- **Polished, custom UI** — a Raycast-inspired design system: flat dark surfaces, depth from a surface ladder and 1px hairlines rather than blur or glow, Inter + JetBrains Mono, Framer Motion micro-interactions. Not a stock template.
+- **Polished, custom UI** — a light business SaaS system shaped by Swiss design: disciplined grids, working whitespace, warm paper surfaces, precise hairlines, restrained red accents, Inter Tight + EB Garamond, and purposeful Framer Motion micro-interactions. Not a stock template.
 - **Three ready-to-demo agents** seeded on first run: Lead Qualifier, Support Agent, Research Assistant.
 
 ---
@@ -31,7 +31,7 @@ The agent loop is a **custom ReAct engine written from scratch (~150 lines) — 
 
 | Screen | What it does |
 | --- | --- |
-| **Agents** | Card grid of your agents — status, run/doc counts, tools, last activity. |
+| **Agents** | Structured agent directory — status, run/doc counts, tools, and last activity. |
 | **Agent Builder** | Configure system prompt, tools, model, and settings. |
 | **Playground** | Split view — chat on the left, the agent's **live reasoning trace** on the right. *(the wow moment)* |
 | **Knowledge Base** | Upload PDFs / paste text; chunked, embedded, and searchable per agent. |

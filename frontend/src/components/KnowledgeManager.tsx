@@ -5,13 +5,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "@/lib/api";
 import type { DocumentItem } from "@/lib/types";
-import { formatBytes, timeAgo } from "@/lib/utils";
-import { Button, EmptyState, Field, Input, Skeleton, Textarea } from "@/components/ui";
+import { errorMessage, formatBytes, timeAgo } from "@/lib/utils";
+import {
+  Button,
+  EmptyState,
+  Field,
+  Input,
+  Skeleton,
+  Textarea,
+} from "@/components/ui";
 
 export function KnowledgeManager({ agentId }: { agentId: string }) {
   const [docs, setDocs] = useState<DocumentItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [showText, setShowText] = useState(false);
   const [filename, setFilename] = useState("");
   const [content, setContent] = useState("");
@@ -21,7 +30,7 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
     return api
       .listDocuments(agentId)
       .then(setDocs)
-      .catch((loadError) => setError(String(loadError)));
+      .catch((loadError) => setError(errorMessage(loadError)));
   }, [agentId]);
 
   useEffect(() => {
@@ -35,7 +44,7 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
       await api.uploadDocument(agentId, file);
       await load();
     } catch (e) {
-      setError(String(e));
+      setError(errorMessage(e));
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -53,25 +62,30 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
       setShowText(false);
       await load();
     } catch (e) {
-      setError(String(e));
+      setError(errorMessage(e));
     } finally {
       setBusy(false);
     }
   };
 
   const onDelete = async (id: string) => {
+    setDeletingId(id);
+    setError(null);
     try {
       await api.deleteDocument(id);
+      setConfirmDeleteId(null);
       await load();
     } catch (e) {
-      setError(String(e));
+      setError(errorMessage(e));
+    } finally {
+      setDeletingId(null);
     }
   };
 
   return (
     <div className="space-y-6">
       {error && (
-        <div className="border-l-2 border-accent-red bg-white px-4 py-3 text-sm text-accent-red">
+        <div role="alert" className="border border-accent-red/40 bg-white px-4 py-3 text-sm text-accent-red">
           {error}
         </div>
       )}
@@ -121,7 +135,12 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
               placeholder="Paste the document text to add to the knowledge base…"
             />
           </Field>
-          <Button variant="primary" onClick={onAddText} loading={busy}>
+          <Button
+            variant="primary"
+            onClick={onAddText}
+            loading={busy}
+            disabled={!filename.trim() || !content.trim()}
+          >
             Add to knowledge base
           </Button>
           </div>
@@ -146,7 +165,7 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
           {docs.map((doc) => (
             <div
               key={doc.id}
-              className="grid gap-4 border-b border-line py-5 sm:grid-cols-[40px_minmax(0,1fr)_120px_40px] sm:items-center"
+              className="grid gap-4 border-b border-line py-5 sm:grid-cols-[40px_minmax(0,1fr)_120px_auto] sm:items-center"
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center border border-line bg-white text-brand">
                 <FileText size={16} />
@@ -156,13 +175,36 @@ export function KnowledgeManager({ agentId }: { agentId: string }) {
                 <p className="mt-1 text-xs text-ink-muted">{formatBytes(doc.size)} · added {timeAgo(doc.created_at)}</p>
               </div>
               <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-faint">{doc.chunk_count} chunks</p>
-              <button
-                onClick={() => onDelete(doc.id)}
-                className="grid h-8 w-8 place-items-center text-ink-faint transition-colors hover:text-accent-red"
-                aria-label="Delete document"
-              >
-                <Trash2 size={15} />
-              </button>
+              {confirmDeleteId === doc.id ? (
+                <div className="flex items-center gap-1.5 sm:justify-self-end">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    loading={deletingId === doc.id}
+                    onClick={() => onDelete(doc.id)}
+                  >
+                    Delete
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteId(null)}
+                    disabled={deletingId === doc.id}
+                    className="grid h-8 w-8 place-items-center text-ink-faint transition-colors hover:text-ink disabled:opacity-40"
+                    aria-label={`Cancel deleting ${doc.filename}`}
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteId(doc.id)}
+                  className="grid h-9 w-9 place-items-center text-ink-faint transition-colors hover:text-accent-red sm:justify-self-end"
+                  aria-label={`Delete ${doc.filename}`}
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
             </div>
           ))}
         </div>

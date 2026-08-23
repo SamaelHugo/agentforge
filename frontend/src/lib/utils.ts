@@ -5,6 +5,16 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
+/** Keep UI errors readable without leaking JavaScript's noisy `Error:` prefix. */
+export function errorMessage(
+  error: unknown,
+  fallback = "Something went wrong. Please try again.",
+): string {
+  if (error instanceof Error && error.message.trim()) return error.message;
+  if (typeof error === "string" && error.trim()) return error;
+  return fallback;
+}
+
 /** Parse an ISO timestamp, treating offset-less strings as UTC.
  *  The backend serializes naive (UTC) datetimes without a 'Z'; JS would
  *  otherwise parse those as local time and skew every relative timestamp. */
