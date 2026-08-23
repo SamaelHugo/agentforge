@@ -11,7 +11,7 @@ import { ToolPill } from "@/components/ToolPill";
 import { Spinner } from "@/components/ui";
 import { api } from "@/lib/api";
 import { streamRun } from "@/lib/sse";
-import type { Agent, TraceEvent } from "@/lib/types";
+import type { Agent, ConversationTurn, TraceEvent } from "@/lib/types";
 
 type Status = "idle" | "running" | "completed" | "error";
 
@@ -42,6 +42,25 @@ function suggestionsFor(agent: Agent): string[] {
   ];
 }
 
+function successfulHistory(messages: ChatMessage[]): ConversationTurn[] {
+  const turns: ConversationTurn[] = [];
+  for (let index = 0; index + 1 < messages.length; index += 2) {
+    const user = messages[index];
+    const assistant = messages[index + 1];
+    if (
+      user.role === "user" &&
+      assistant.role === "assistant" &&
+      !assistant.error
+    ) {
+      turns.push(
+        { role: "user", content: user.text },
+        { role: "assistant", content: assistant.text },
+      );
+    }
+  }
+  return turns.slice(-20);
+}
+
 export default function PlaygroundPage() {
   const { id } = useParams<{ id: string }>();
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -70,6 +89,7 @@ export default function PlaygroundPage() {
 
       try {
         await streamRun(id, text, {
+          history: successfulHistory(messages),
           signal: ctrl.signal,
           onEvent: (e) => {
             if (e.type === "start") return;
@@ -115,7 +135,7 @@ export default function PlaygroundPage() {
         setStatus("error");
       }
     },
-    [id, status],
+    [id, messages, status],
   );
 
   if (!agent) {

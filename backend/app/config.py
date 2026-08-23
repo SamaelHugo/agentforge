@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     gemini_api_key: str | None = None
     anthropic_api_key: str | None = None
+    tavily_api_key: str | None = None
     default_model: str = "gpt-4o-mini"
     max_tokens: int = 4096
 
@@ -37,6 +38,9 @@ class Settings(BaseSettings):
     seed_on_startup: bool = True
     rate_limit_per_min: int = 10  # per-IP cap on agent runs (0 disables)
     write_limit_per_min: int = 20  # per-IP cap on create/update/delete (0 disables)
+    # Optional single-tenant deployment guard. Leave unset for the local/public
+    # demo; set a strong secret in production and enter it in the frontend.
+    api_auth_token: str | None = None
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -12,9 +12,24 @@ import type {
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
 
+export const API_TOKEN_KEY = "agentforge_api_token";
+
+export function readApiToken(): string {
+  if (typeof window === "undefined") return "";
+  return window.sessionStorage.getItem(API_TOKEN_KEY) || "";
+}
+
+export function apiAuthHeaders(token = readApiToken()): Record<string, string> {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...apiAuthHeaders(),
+      ...(init?.headers || {}),
+    },
     cache: "no-store",
     ...init,
   });
@@ -65,6 +80,7 @@ export const api = {
     form.append("file", file);
     const res = await fetch(`${API_BASE}/api/agents/${agentId}/documents/upload`, {
       method: "POST",
+      headers: apiAuthHeaders(),
       body: form,
     });
     if (!res.ok) {

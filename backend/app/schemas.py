@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -28,7 +28,7 @@ class AgentBase(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     description: str = ""
     system_prompt: str = ""
-    model: str = "claude-opus-4-8"
+    model: str = "llama-3.3-70b-versatile"
     settings: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -104,5 +104,11 @@ class RunDetail(RunOut):
     steps: list[RunStepOut] = Field(default_factory=list)
 
 
+class ChatTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=8000)
+
+
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=8000)
+    history: list[ChatTurn] = Field(default_factory=list, max_length=20)

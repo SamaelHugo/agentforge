@@ -21,6 +21,12 @@ services:
       # Render prompts for this at blueprint creation and keeps it secret.
       - key: GROQ_API_KEY
         sync: false
+      # Real external sources for the web_search tool.
+      - key: TAVILY_API_KEY
+        sync: false
+      # Protect data-bearing API routes. Share this token only with demo users.
+      - key: API_AUTH_TOKEN
+        sync: false
       # DATABASE_URL is intentionally NOT declared here.
       #
       # Unset, the backend uses SQLite on the container's filesystem. Render's

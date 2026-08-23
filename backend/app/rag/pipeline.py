@@ -3,9 +3,8 @@
 Ingestion: split → embed → persist Document + Chunks.
 Search:    embed query → cosine similarity over the agent's chunks → top-k.
 
-Embeddings are stored L2-normalised, so cosine similarity is just a dot
-product (computed with numpy). On Postgres you'd push this into pgvector with
-`ORDER BY embedding <=> :q LIMIT k`; the SQLite path keeps it in Python.
+Embeddings are stored L2-normalised. SQLite computes cosine similarity in
+NumPy; PostgreSQL executes the ranked search in pgvector and can use HNSW.
 """
 from __future__ import annotations
 
@@ -17,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..embeddings import get_embedder
+from ..database import engine
 from ..models import Chunk, Document
 from .splitter import split_text
 
@@ -94,14 +94,32 @@ def search(db: Session, *, agent_id: str, query: str, top_k: int | None = None) 
     settings = get_settings()
     top_k = top_k or settings.top_k
 
-    chunks: list[Chunk] = (
-        db.query(Chunk).filter(Chunk.agent_id == agent_id).all()
-    )
-    if not chunks:
-        return []
-
     q = np.array(get_embedder().embed_query(query), dtype=np.float32)
     dim = int(q.shape[0])
+
+    if engine.dialect.name == "postgresql":
+        distance = Chunk.embedding.cosine_distance(q.tolist()).label("distance")
+        rows = (
+            db.query(Chunk, distance)
+            .filter(Chunk.agent_id == agent_id)
+            .order_by(distance)
+            .limit(top_k)
+            .all()
+        )
+        return [
+            SearchHit(
+                content=chunk.content,
+                score=1.0 - float(row_distance),
+                filename=(chunk.meta or {}).get("filename", "document"),
+                chunk_index=chunk.index,
+                document_id=chunk.document_id,
+            )
+            for chunk, row_distance in rows
+        ]
+
+    chunks: list[Chunk] = db.query(Chunk).filter(Chunk.agent_id == agent_id).all()
+    if not chunks:
+        return []
 
     # Only compare against chunks whose embedding dimension matches the active
     # embedder. This guards against mixing providers (e.g. local 384-dim vs

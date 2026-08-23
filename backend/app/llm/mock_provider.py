@@ -29,8 +29,9 @@ def _text_of(content: Any) -> str:
     return ""
 
 
-def _first_user_text(messages: list[dict]) -> str:
-    for msg in messages:
+def _latest_user_text(messages: list[dict]) -> str:
+    """Return the current user turn, ignoring earlier conversation history."""
+    for msg in reversed(messages):
         if msg.get("role") == "user":
             txt = _text_of(msg.get("content"))
             if txt:
@@ -49,6 +50,33 @@ def _count_tool_turns(messages: list[dict]) -> int:
         ):
             count += 1
     return count
+
+
+def _tool_result_for(messages: list[dict], tool_name: str) -> str:
+    """Return the latest result produced by a named tool.
+
+    Tool results only carry a call id, so first index assistant tool-use blocks
+    and then resolve the corresponding user tool-result blocks. This prevents a
+    later ``save_to_db`` confirmation from being presented as a RAG citation.
+    """
+    call_names: dict[str, str] = {}
+    latest = ""
+    for msg in messages:
+        content = msg.get("content")
+        if not isinstance(content, list):
+            continue
+        if msg.get("role") == "assistant":
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "tool_use":
+                    call_names[str(block.get("id"))] = str(block.get("name"))
+        elif msg.get("role") == "user":
+            for block in content:
+                if not isinstance(block, dict) or block.get("type") != "tool_result":
+                    continue
+                call_id = str(block.get("tool_use_id"))
+                if call_names.get(call_id) == tool_name:
+                    latest = _stringify(block.get("content"))
+    return latest
 
 
 def _last_tool_result(messages: list[dict]) -> str:
@@ -168,8 +196,8 @@ def _final_text(query: str, sequence: list[str], last_result: str) -> str:
         lines.append("The outcome has been saved to the database for your records.")
     lines.append("")
     lines.append(
-        "_(Running in offline mock mode — set ANTHROPIC_API_KEY to use Claude for "
-        "live reasoning.)_"
+        "_(Running in deterministic offline mock mode — configure a live LLM "
+        "provider to replace the simulated reasoning.)_"
     )
     return "\n".join(lines)
 
@@ -187,7 +215,7 @@ class MockProvider:
         max_tokens: int,
         effort: str | None = None,
     ) -> LLMResult:
-        query = _first_user_text(messages)
+        query = _latest_user_text(messages)
         available = [t.get("name") for t in tools]
         sequence = [n for n in _TOOL_PRIORITY if n in available][:_MAX_TOOL_STEPS]
         done = _count_tool_turns(messages)
@@ -207,7 +235,8 @@ class MockProvider:
                 usage={"input_tokens": 0, "output_tokens": 0},
             )
 
-        text = _final_text(query, sequence, _last_tool_result(messages))
+        knowledge_result = _tool_result_for(messages, "search_knowledge")
+        text = _final_text(query, sequence, knowledge_result or _last_tool_result(messages))
         return LLMResult(
             text=text,
             thinking="I've gathered everything I need. Composing the final answer now.",

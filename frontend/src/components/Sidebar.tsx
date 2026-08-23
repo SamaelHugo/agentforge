@@ -2,8 +2,11 @@
 
 import {
   Boxes,
+  Database,
   FileText,
   History,
+  KeyRound,
+  LogOut,
   type LucideIcon,
   Sparkles,
   SquareTerminal,
@@ -12,7 +15,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { API_BASE } from "@/lib/api";
+import {
+  API_BASE,
+  API_TOKEN_KEY,
+  apiAuthHeaders,
+  readApiToken,
+} from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -47,6 +55,12 @@ const NAV: NavItem[] = [
     icon: History,
     match: (p) => p.startsWith("/runs"),
   },
+  {
+    href: "/artifacts",
+    label: "Artifacts",
+    icon: Database,
+    match: (p) => p.startsWith("/artifacts"),
+  },
 ];
 
 /** The backend reports whichever LLM provider actually resolved — show that,
@@ -72,14 +86,52 @@ function describeEngine(provider: string | null): { label: string; dot: string }
 export function Sidebar() {
   const pathname = usePathname();
   const [provider, setProvider] = useState<string | null>(null);
+  const [authRequired, setAuthRequired] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
+  const [tokenInput, setTokenInput] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const engine = describeEngine(provider);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/health`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setProvider(d.llm_provider))
+      .then((d) => {
+        if (!d) return;
+        setHasToken(Boolean(readApiToken()));
+        setProvider(d.llm_provider);
+        setAuthRequired(Boolean(d.auth_required));
+      })
       .catch(() => setProvider("offline"));
   }, []);
+
+  const unlock = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const token = tokenInput.trim();
+    if (!token) return;
+    setAuthBusy(true);
+    setAuthError(null);
+    try {
+      const response = await fetch(`${API_BASE}/api/agents`, {
+        headers: apiAuthHeaders(token),
+      });
+      if (!response.ok) throw new Error("Invalid access token");
+      window.sessionStorage.setItem(API_TOKEN_KEY, token);
+      setHasToken(true);
+      setTokenInput("");
+      window.location.reload();
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Could not authenticate");
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const clearToken = () => {
+    window.sessionStorage.removeItem(API_TOKEN_KEY);
+    setHasToken(false);
+    window.location.reload();
+  };
 
   return (
     <aside className="sticky top-0 flex h-screen w-[248px] shrink-0 flex-col gap-2 border-r border-line bg-surface p-5">
@@ -120,7 +172,60 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-auto px-2">
+      <div className="mt-auto space-y-2 px-2">
+        {authRequired &&
+          (hasToken ? (
+            <div className="flex items-center gap-2 rounded-xl border border-accent-green/20 bg-accent-green/[0.06] px-3 py-2.5">
+              <KeyRound size={14} className="text-accent-green" />
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="micro-label">Access</p>
+                <p className="truncate text-xs text-ink-muted">Token active</p>
+              </div>
+              <button
+                type="button"
+                onClick={clearToken}
+                className="grid h-7 w-7 place-items-center rounded-lg text-ink-faint transition-colors hover:bg-surface-raised hover:text-ink"
+                aria-label="Clear access token"
+                title="Clear access token"
+              >
+                <LogOut size={13} />
+              </button>
+            </div>
+          ) : (
+            <form
+              onSubmit={unlock}
+              className="rounded-xl border border-accent-amber/20 bg-accent-amber/[0.05] p-3"
+            >
+              <label
+                htmlFor="agentforge-access-token"
+                className="micro-label mb-2 flex items-center gap-1.5"
+              >
+                <KeyRound size={12} />
+                Access token
+              </label>
+              <div className="flex gap-1.5">
+                <input
+                  id="agentforge-access-token"
+                  type="password"
+                  value={tokenInput}
+                  onChange={(event) => setTokenInput(event.target.value)}
+                  placeholder="Required"
+                  autoComplete="current-password"
+                  className="field min-w-0 flex-1 rounded-lg px-2.5 py-1.5 text-xs text-ink placeholder:text-ink-faint"
+                />
+                <button
+                  type="submit"
+                  disabled={authBusy || !tokenInput.trim()}
+                  className="rounded-lg bg-white px-2.5 py-1.5 text-xs font-medium text-bg disabled:opacity-40"
+                >
+                  {authBusy ? "…" : "Unlock"}
+                </button>
+              </div>
+              {authError && (
+                <p className="mt-1.5 text-[11px] text-accent-red">{authError}</p>
+              )}
+            </form>
+          ))}
         <div className="flex items-center gap-2 rounded-xl border border-line-soft bg-surface px-3 py-2.5">
           <span
             className={cn("h-2 w-2 rounded-full", engine.dot)}

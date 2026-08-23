@@ -1,5 +1,5 @@
-import { API_BASE } from "./api";
-import type { TraceEvent } from "./types";
+import { API_BASE, apiAuthHeaders } from "./api";
+import type { ConversationTurn, TraceEvent } from "./types";
 
 /**
  * Stream an agent run over Server-Sent Events.
@@ -11,12 +11,16 @@ import type { TraceEvent } from "./types";
 export async function streamRun(
   agentId: string,
   message: string,
-  opts: { onEvent: (event: TraceEvent) => void; signal?: AbortSignal },
+  opts: {
+    history?: ConversationTurn[];
+    onEvent: (event: TraceEvent) => void;
+    signal?: AbortSignal;
+  },
 ): Promise<void> {
   const res = await fetch(`${API_BASE}/api/agents/${agentId}/runs`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
+    headers: { "Content-Type": "application/json", ...apiAuthHeaders() },
+    body: JSON.stringify({ message, history: opts.history ?? [] }),
     signal: opts.signal,
   });
 
