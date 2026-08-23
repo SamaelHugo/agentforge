@@ -11,6 +11,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from ..auth import require_api_auth
 from ..database import SessionLocal, get_db
 from ..engine import ReActEngine, events
 from ..models import Agent, Run, RunStep
@@ -18,7 +19,9 @@ from ..ratelimit import rate_limit
 from ..schemas import ChatRequest, RunDetail, RunOut, RunStepOut
 from ..tools import ToolContext
 
-router = APIRouter(prefix="/api", tags=["runs"])
+router = APIRouter(
+    prefix="/api", tags=["runs"], dependencies=[Depends(require_api_auth)]
+)
 
 logger = logging.getLogger("agentforge.runs")
 
@@ -65,7 +68,11 @@ def stream_run(
             engine = ReActEngine()
 
             step_index = 0
-            for event in engine.run(ctx, user_message=body.message):
+            for event in engine.run(
+                ctx,
+                user_message=body.message,
+                history=[turn.model_dump() for turn in body.history],
+            ):
                 sdb.add(
                     RunStep(
                         run_id=run_id,

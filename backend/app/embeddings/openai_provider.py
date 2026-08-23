@@ -8,14 +8,13 @@ from __future__ import annotations
 import httpx
 
 _MODEL = "text-embedding-3-small"
-_DIM = 1536
 _URL = "https://api.openai.com/v1/embeddings"
 
 
 class OpenAIEmbedder:
     name = "openai"
 
-    def __init__(self, api_key: str, dim: int = _DIM) -> None:
+    def __init__(self, api_key: str, dim: int = 384) -> None:
         self._api_key = api_key
         self.dim = dim
 
@@ -23,7 +22,7 @@ class OpenAIEmbedder:
         resp = httpx.post(
             _URL,
             headers={"Authorization": f"Bearer {self._api_key}"},
-            json={"model": _MODEL, "input": inputs},
+            json={"model": _MODEL, "input": inputs, "dimensions": self.dim},
             timeout=60.0,
         )
         resp.raise_for_status()

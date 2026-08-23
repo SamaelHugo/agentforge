@@ -170,6 +170,7 @@ export function ChatPanel({
       <div className="border-t border-line p-4">
         <div className="field flex items-end gap-2 rounded-2xl p-2">
           <textarea
+            aria-label="Agent message"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => {
@@ -183,6 +184,8 @@ export function ChatPanel({
             className="max-h-36 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-ink outline-none placeholder:text-ink-faint"
           />
           <button
+            type="button"
+            aria-label="Send message"
             onClick={submit}
             disabled={running || !value.trim()}
             className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-bg transition-all hover:bg-white/90 disabled:opacity-40"

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from ..auth import require_api_auth
 from ..database import get_db
 from ..models import Agent, AgentTool, Artifact
 from ..ratelimit import write_limit
@@ -12,7 +13,9 @@ from ..schemas import AgentCreate, AgentOut, AgentUpdate, ToolInfo
 from ..serializers import agent_out
 from ..tools import get_tool, tool_catalog
 
-router = APIRouter(prefix="/api", tags=["agents"])
+router = APIRouter(
+    prefix="/api", tags=["agents"], dependencies=[Depends(require_api_auth)]
+)
 
 
 @router.get("/tools", response_model=list[ToolInfo])

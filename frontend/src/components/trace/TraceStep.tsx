@@ -76,7 +76,8 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
   }
 
   if (type === "tool_call") {
-    const meta = toolMeta(content.tool);
+    const toolName = content.tool ?? "tool";
+    const meta = toolMeta(toolName);
     const accent = ACCENT[meta.accent];
     const Icon = meta.icon;
     return (
@@ -88,7 +89,7 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
         labelClass={accent.text}
       >
         <p className="text-sm text-ink">
-          Calling <span className={cn("font-mono", accent.text)}>{content.tool}</span>
+          Calling <span className={cn("font-mono", accent.text)}>{toolName}</span>
         </p>
         <CodeBlock>{JSON.stringify(content.input ?? {}, null, 2)}</CodeBlock>
       </StepShell>
@@ -96,8 +97,8 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
   }
 
   if (type === "result") {
-    const meta = toolMeta(content.tool);
     const data = content.data ?? {};
+    const toolName = content.tool ?? "tool";
     return (
       <StepShell
         last={last}
@@ -107,12 +108,12 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
         labelClass="text-accent-green"
       >
         <p className="text-sm text-ink-muted">
-          <span className="font-mono text-accent-green">{content.tool}</span> returned:
+          <span className="font-mono text-accent-green">{toolName}</span> returned:
         </p>
 
         {Array.isArray(data.hits) && data.hits.length > 0 ? (
           <div className="mt-2 space-y-2">
-            {data.hits.map((hit: any, i: number) => (
+            {data.hits.map((hit, i) => (
               <div
                 key={i}
                 className="rounded-lg border border-accent-cyan/20 bg-accent-cyan/10 p-2.5"
@@ -134,15 +135,15 @@ export function TraceStep({ event, last }: { event: TraceEvent; last?: boolean }
           </div>
         ) : Array.isArray(data.results) && data.results.length > 0 ? (
           <div className="mt-2 space-y-2">
-            {data.results.map((r: any, i: number) => (
+            {data.results.map((result, i) => (
               <div
                 key={i}
                 className="rounded-lg border border-accent-amber/20 bg-accent-amber/10 p-2.5"
               >
-                <p className="text-[13px] font-medium text-ink">{r.title}</p>
-                <p className="truncate text-[11px] text-accent-amber">{r.url}</p>
+                <p className="text-[13px] font-medium text-ink">{result.title}</p>
+                <p className="truncate text-[11px] text-accent-amber">{result.url}</p>
                 <p className="mt-1 line-clamp-2 text-[13px] text-ink-muted">
-                  {r.snippet}
+                  {result.snippet}
                 </p>
               </div>
             ))}

@@ -19,7 +19,9 @@ def get_embedder() -> Embedder:
             )
         from .openai_provider import OpenAIEmbedder
 
-        return OpenAIEmbedder(api_key=settings.openai_api_key)
+        return OpenAIEmbedder(
+            api_key=settings.openai_api_key, dim=settings.embedding_dim
+        )
 
     from .local import LocalEmbedder
 

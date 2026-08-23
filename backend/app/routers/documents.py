@@ -5,13 +5,16 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from ..auth import require_api_auth
 from ..database import get_db
 from ..models import Agent, Document
 from ..rag import extract_text, ingest_document
 from ..ratelimit import write_limit
 from ..schemas import DocumentOut, TextDocumentCreate
 
-router = APIRouter(prefix="/api", tags=["documents"])
+router = APIRouter(
+    prefix="/api", tags=["documents"], dependencies=[Depends(require_api_auth)]
+)
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 

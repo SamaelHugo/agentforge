@@ -53,6 +53,7 @@ def health() -> dict:
         "llm_provider": settings.resolved_llm_provider,
         "embeddings_provider": settings.resolved_embeddings_provider,
         "default_model": settings.default_model,
+        "auth_required": bool(settings.api_auth_token),
     }
 
 

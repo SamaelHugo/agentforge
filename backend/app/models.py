@@ -1,8 +1,7 @@
 """SQLAlchemy ORM models.
 
-The schema maps 1:1 to the design doc. Vector embeddings are stored as JSON
-(a list of floats) which works on every backend including SQLite; on Postgres
-you'd swap the `embedding` column for a pgvector `Vector` type (see README).
+SQLite stores embeddings as JSON. PostgreSQL uses a native pgvector ``Vector``
+column so retrieval can stay inside the database and use an ANN index.
 """
 from __future__ import annotations
 
@@ -19,7 +18,15 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .database import Base
+from .config import get_settings
+from .database import DATABASE_URL, Base
+
+if DATABASE_URL.startswith("postgresql"):
+    from pgvector.sqlalchemy import Vector
+
+    _embedding_type = Vector(get_settings().embedding_dim)
+else:
+    _embedding_type = JSON
 
 
 def _uuid() -> str:
@@ -37,7 +44,7 @@ class Agent(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     description: Mapped[str] = mapped_column(Text, default="")
     system_prompt: Mapped[str] = mapped_column(Text, default="")
-    model: Mapped[str] = mapped_column(String(80), default="claude-opus-4-8")
+    model: Mapped[str] = mapped_column(String(80), default="llama-3.3-70b-versatile")
     # free-form settings: {"max_tokens": 4096, "effort": "medium", ...}
     settings: Mapped[dict] = mapped_column(JSON, default=dict)
     status: Mapped[str] = mapped_column(String(20), default="active")
@@ -53,6 +60,9 @@ class Agent(Base):
         back_populates="agent", cascade="all, delete-orphan"
     )
     runs: Mapped[list["Run"]] = relationship(
+        back_populates="agent", cascade="all, delete-orphan"
+    )
+    artifacts: Mapped[list["Artifact"]] = relationship(
         back_populates="agent", cascade="all, delete-orphan"
     )
 
@@ -99,7 +109,7 @@ class Chunk(Base):
     agent_id: Mapped[str] = mapped_column(String(32), index=True)
     index: Mapped[int] = mapped_column(Integer, default=0)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    embedding: Mapped[list] = mapped_column(JSON, default=list)
+    embedding: Mapped[list] = mapped_column(_embedding_type, default=list)
     meta: Mapped[dict] = mapped_column(JSON, default=dict)
 
     document: Mapped["Document"] = relationship(back_populates="chunks")
@@ -134,13 +144,19 @@ class Artifact(Base):
     __tablename__ = "artifacts"
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
-    agent_id: Mapped[str] = mapped_column(String(32), index=True)
-    run_id: Mapped[str | None] = mapped_column(String(32), index=True, nullable=True)
+    agent_id: Mapped[str] = mapped_column(
+        ForeignKey("agents.id", ondelete="CASCADE"), index=True
+    )
+    run_id: Mapped[str | None] = mapped_column(
+        ForeignKey("runs.id", ondelete="SET NULL"), index=True, nullable=True
+    )
     kind: Mapped[str] = mapped_column(String(40), default="record")
     title: Mapped[str] = mapped_column(String(255), default="")
     content: Mapped[str] = mapped_column(Text, default="")
     data: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+    agent: Mapped["Agent"] = relationship(back_populates="artifacts")
 
 
 class RunStep(Base):

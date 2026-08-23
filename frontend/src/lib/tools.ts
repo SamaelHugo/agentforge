@@ -43,7 +43,7 @@ export const TOOL_META: Record<string, ToolMeta> = {
   web_search: {
     name: "web_search",
     label: "Web Search",
-    description: "Search the web for recent info (mock integration).",
+    description: "Search the live web through Tavily when configured.",
     icon: Globe,
     accent: "amber",
   },

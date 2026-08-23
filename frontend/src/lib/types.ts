@@ -53,11 +53,49 @@ export type StepType =
   | "error"
   | "final";
 
+export interface KnowledgeHit {
+  content: string;
+  score: number;
+  filename: string;
+  chunk_index?: number;
+  document_id?: string;
+}
+
+export interface WebSearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+}
+
+export interface ConversationTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface TraceData {
+  hits?: KnowledgeHit[];
+  results?: WebSearchResult[];
+  [key: string]: unknown;
+}
+
+export interface TraceContent {
+  text?: string;
+  tool?: string;
+  input?: Record<string, unknown>;
+  output?: string;
+  message?: string;
+  data?: TraceData;
+  run_id?: string;
+  status?: string;
+  error?: string;
+  [key: string]: unknown;
+}
+
 export interface RunStep {
   id: string;
   step_index: number;
   type: StepType;
-  content: Record<string, any>;
+  content: TraceContent;
   created_at: string;
 }
 
@@ -81,7 +119,7 @@ export type TraceEventType = StepType | "start" | "done";
 
 export interface TraceEvent {
   type: TraceEventType;
-  content: Record<string, any>;
+  content: TraceContent;
 }
 
 export interface Artifact {

@@ -42,6 +42,7 @@ class ReActEngine:
         ctx: ToolContext,
         *,
         user_message: str,
+        history: list[dict[str, str]] | None = None,
         max_steps: int = MAX_STEPS,
     ) -> Iterator[dict[str, Any]]:
         settings = get_settings()
@@ -62,7 +63,11 @@ class ReActEngine:
             effort = None
         system = agent.system_prompt or ""
 
-        messages: list[dict[str, Any]] = [{"role": "user", "content": user_message}]
+        messages: list[dict[str, Any]] = [
+            {"role": turn["role"], "content": turn["content"]}
+            for turn in (history or [])
+        ]
+        messages.append({"role": "user", "content": user_message})
 
         for _ in range(max_steps):
             try:
