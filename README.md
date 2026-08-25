@@ -90,7 +90,7 @@ flowchart LR
 ## 🚀 Quickstart
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.12+
 - Node.js 20.9+
 
 ### 1. Backend
