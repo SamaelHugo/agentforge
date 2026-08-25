@@ -28,7 +28,7 @@ class AgentBase(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     description: str = ""
     system_prompt: str = ""
-    model: str = "llama-3.3-70b-versatile"
+    model: str = "openai/gpt-oss-120b"
     settings: dict[str, Any] = Field(default_factory=dict)
 
 

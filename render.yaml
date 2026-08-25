@@ -14,10 +14,10 @@ services:
       # Allow the Vercel frontend to call the API (tighten to your domain later).
       - key: CORS_ORIGINS
         value: "*"
-      # Model the agents run on (Groq serves Llama on a free tier).
+      # Production Groq model with tool calling support.
       - key: DEFAULT_MODEL
-        value: llama-3.3-70b-versatile
-      # Free, no credit card: https://console.groq.com → API Keys.
+        value: openai/gpt-oss-120b
+      # Create a key at https://console.groq.com → API Keys.
       # Render prompts for this at blueprint creation and keeps it secret.
       - key: GROQ_API_KEY
         sync: false

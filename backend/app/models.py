@@ -44,7 +44,7 @@ class Agent(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     description: Mapped[str] = mapped_column(Text, default="")
     system_prompt: Mapped[str] = mapped_column(Text, default="")
-    model: Mapped[str] = mapped_column(String(80), default="llama-3.3-70b-versatile")
+    model: Mapped[str] = mapped_column(String(80), default="openai/gpt-oss-120b")
     # free-form settings: {"max_tokens": 4096, "effort": "medium", ...}
     settings: Mapped[dict] = mapped_column(JSON, default=dict)
     status: Mapped[str] = mapped_column(String(20), default="active")

@@ -42,6 +42,16 @@ GROQ_PREFIXES = (
 )
 GEMINI_PREFIXES = ("gemini", "gemma")
 
+# Groq retired the former free/developer-tier defaults on 2026-08-16. Keep
+# aliases here so agents saved before that date continue to run instead of
+# sending a dead model id to the provider.
+GROQ_DEFAULT_MODEL = "openai/gpt-oss-120b"
+GROQ_MODEL_ALIASES = {
+    "llama-3.3-70b-versatile": GROQ_DEFAULT_MODEL,
+    "llama-3.1-8b-instant": "openai/gpt-oss-20b",
+    "gemma2-9b-it": "openai/gpt-oss-20b",
+}
+
 
 def _retry_after_seconds(resp: httpx.Response) -> float | None:
     """Seconds from a Retry-After header, or None when absent/unparseable.
@@ -178,12 +188,16 @@ class OpenAIProvider:
         default_model: str = "gpt-4o-mini",
         name: str = "openai",
         model_prefixes: tuple[str, ...] = OPENAI_PREFIXES,
+        model_aliases: dict[str, str] | None = None,
     ) -> None:
         self.name = name
         self._api_key = api_key
         self._url = base_url.rstrip("/") + "/chat/completions"
         self._default_model = default_model
         self._prefixes = tuple(p.lower() for p in model_prefixes)
+        self._model_aliases = {
+            key.lower(): value for key, value in (model_aliases or {}).items()
+        }
 
     @staticmethod
     def _is_tool_use_failed(resp: httpx.Response) -> bool:
@@ -298,9 +312,12 @@ class OpenAIProvider:
         # Use the agent's model only if it belongs to this endpoint's family,
         # otherwise fall back to the configured default (e.g. a seeded "gpt-*"
         # value when the active endpoint is Groq).
-        use_model = (
-            model if (model and model.lower().startswith(self._prefixes)) else self._default_model
+        requested_model = (
+            model
+            if (model and model.lower().startswith(self._prefixes))
+            else self._default_model
         )
+        use_model = self._model_aliases.get(requested_model.lower(), requested_model)
         body: dict[str, Any] = {
             "model": use_model,
             "messages": to_openai_messages(system, messages),

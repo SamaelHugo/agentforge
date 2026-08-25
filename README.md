@@ -2,13 +2,13 @@
 
 **An AI agent platform — build agents, give them tools and knowledge, and watch them reason in real time.**
 
-**🔗 Live demo: [agentforge-eight.vercel.app](https://agentforge-eight.vercel.app)** — real agents on **Llama 3.3 70B** via Groq, no signup; open it and hit **Playground**. The backend sleeps on Render's free tier, so the first request may take ~30–60s to wake.
+**🔗 Live demo: [agentforge-eight.vercel.app](https://agentforge-eight.vercel.app)** — real agents on **GPT-OSS 120B** via Groq, no signup; open it and hit **Playground**. The backend sleeps on Render's free tier, so the first request may take ~30–60s to wake.
 
 AgentForge is a full-stack application where you create AI agents, configure their system prompt, tools, and a knowledge base, then run them in a split-view **Playground** that streams the agent's "thinking", tool calls, and results live as it works.
 
 The agent loop is a **custom ReAct engine written from scratch (~150 lines) — no LangChain** — so every step is observable, controllable, and cheap. It pairs a hand-built **RAG pipeline** (chunking → embeddings → vector search) with **real-time execution tracing** over Server-Sent Events.
 
-> Runs **fully offline out of the box**: with no API keys it uses a deterministic mock reasoning engine + local embeddings + SQLite, so you can clone and demo it in one command. Add a free `GROQ_API_KEY` ([console.groq.com](https://console.groq.com) — no card) to switch to live Llama 3.3 70B reasoning, the same setup the live demo runs. Gemini, OpenAI, and Anthropic Claude work too — the provider is auto-selected from whichever keys you set, in the order Groq → Gemini → OpenAI → Anthropic. External web search is disabled honestly until `TAVILY_API_KEY` is configured; offline mode never fabricates sources.
+> Runs **fully offline out of the box**: with no API keys it uses a deterministic mock reasoning engine + local embeddings + SQLite, so you can clone and demo it in one command. Add a `GROQ_API_KEY` ([console.groq.com](https://console.groq.com)) to switch to live GPT-OSS 120B reasoning, the same setup the live demo runs. Gemini, OpenAI, and Anthropic Claude work too — the provider is auto-selected from whichever keys you set, in the order Groq → Gemini → OpenAI → Anthropic. External web search is disabled honestly until `TAVILY_API_KEY` is configured; offline mode never fabricates sources.
 
 ![AgentForge Playground — chat on the left, the agent's live execution trace (thinking, tool calls, RAG results) on the right](assets/playground.png)
 
@@ -110,9 +110,9 @@ The API is now on **http://localhost:8000** (docs at `/docs`). On first run it
 applies the Alembic migrations and seeds three demo agents with knowledge bases.
 
 > **No API key?** It just works — the backend falls back to a deterministic mock
-> reasoning engine and local embeddings. To run on a real LLM, set a free
-> `GROQ_API_KEY` in `backend/.env` ([console.groq.com](https://console.groq.com)
-> — no card); the bundled `DEFAULT_MODEL=llama-3.3-70b-versatile` works as-is.
+> reasoning engine and local embeddings. To run on a real LLM, set a
+> `GROQ_API_KEY` in `backend/.env` ([console.groq.com](https://console.groq.com));
+> the bundled `DEFAULT_MODEL=openai/gpt-oss-120b` works as-is.
 > `GEMINI_API_KEY`, `OPENAI_API_KEY`, and `ANTHROPIC_API_KEY` also work — with
 > `LLM_PROVIDER=auto` the first key set wins, in the order
 > Groq → Gemini → OpenAI → Anthropic → mock. Provider adapters safely replace a
@@ -151,10 +151,10 @@ All backend settings live in `backend/.env` (see `.env.example`). Highlights:
 | Variable | Default | Notes |
 | --- | --- | --- |
 | `LLM_PROVIDER` | `auto` | `auto` picks the first key set: Groq → Gemini → OpenAI → Anthropic → `mock`. |
-| `GROQ_API_KEY` | — | **Free**, OpenAI-compatible (Llama) — [console.groq.com](https://console.groq.com), no card. |
+| `GROQ_API_KEY` | — | OpenAI-compatible Groq API — [console.groq.com](https://console.groq.com). |
 | `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | — | Other providers (Gemini free tier; OpenAI/Claude paid). |
 | `TAVILY_API_KEY` | — | Enables real external sources for `web_search`; without it the tool returns no sources and says why. |
-| `DEFAULT_MODEL` | `llama-3.3-70b-versatile` (in `.env.example`) | Match the provider, e.g. `gemini-2.0-flash`, `gpt-4o-mini`, or `claude-*`; provider adapters fall back safely when a saved agent uses another provider's model. |
+| `DEFAULT_MODEL` | `openai/gpt-oss-120b` (in `.env.example`) | Match the provider, e.g. `gemini-2.0-flash`, `gpt-4o-mini`, or `claude-*`; provider adapters fall back safely when a saved agent uses another provider's model. |
 | `RATE_LIMIT_PER_MIN` | `10` | Per-IP cap on agent runs (public-demo abuse guard; `0` disables). |
 | `WRITE_LIMIT_PER_MIN` | `20` | Per-IP cap on create/update/delete + uploads (`0` disables). |
 | `EMBEDDINGS_PROVIDER` | `auto` | Local hashing embedder by default; set `openai` for `text-embedding-3-small`. |

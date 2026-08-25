@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .database import SessionLocal, init_db
+from .llm.factory import resolve_default_model
 from .routers import agents, documents, runs
 from .seed import seed_if_empty
 
@@ -52,7 +53,9 @@ def health() -> dict:
         "status": "ok",
         "llm_provider": settings.resolved_llm_provider,
         "embeddings_provider": settings.resolved_embeddings_provider,
-        "default_model": settings.default_model,
+        "default_model": resolve_default_model(
+            settings.resolved_llm_provider, settings.default_model
+        ),
         "auth_required": bool(settings.api_auth_token),
     }
 

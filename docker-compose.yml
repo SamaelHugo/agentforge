@@ -1,7 +1,7 @@
 # Full local stack: Postgres (pgvector) + FastAPI backend + Next.js frontend.
 #   docker compose up --build
 # Then open http://localhost:3000  (API on http://localhost:8000).
-# Works offline (mock engine); export a free GROQ_API_KEY to run on live Llama.
+# Works offline (mock engine); export a Groq API key to run on a live model.
 
 services:
   db:
@@ -32,7 +32,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       TAVILY_API_KEY: ${TAVILY_API_KEY:-}
       API_AUTH_TOKEN: ${API_AUTH_TOKEN:-}
-      DEFAULT_MODEL: ${DEFAULT_MODEL:-llama-3.3-70b-versatile}
+      DEFAULT_MODEL: ${DEFAULT_MODEL:-openai/gpt-oss-120b}
     ports:
       - "8000:8000"
     depends_on:

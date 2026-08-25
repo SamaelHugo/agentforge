@@ -4,6 +4,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from .config import get_settings
+from .llm.factory import resolve_default_model
 from .models import Agent, AgentTool
 from .rag import ingest_document
 
@@ -101,7 +102,9 @@ def _create_agent(
         name=name,
         description=description,
         system_prompt=system_prompt,
-        model=settings.default_model,
+        model=resolve_default_model(
+            settings.resolved_llm_provider, settings.default_model
+        ),
         settings={},
     )
     for tool_name in tools:
