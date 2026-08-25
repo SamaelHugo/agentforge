@@ -8,6 +8,7 @@ offline — and gives a free, fast path for local development.
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from .base import LLMResult, ToolCall
@@ -15,6 +16,25 @@ from .base import LLMResult, ToolCall
 # Priority order the mock "agent" likes to work in.
 _TOOL_PRIORITY = ["search_knowledge", "web_search", "draft_email", "save_to_db"]
 _MAX_TOOL_STEPS = 3
+_QUERY_STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "are",
+    "do",
+    "does",
+    "for",
+    "how",
+    "in",
+    "is",
+    "it",
+    "of",
+    "on",
+    "the",
+    "to",
+    "what",
+    "when",
+}
 
 
 def _text_of(content: Any) -> str:
@@ -166,22 +186,53 @@ def _thinking_for(tool_name: str, step: int, query: str) -> str:
     return plans.get(tool_name, "Let me work through the next step.")
 
 
+def _grounded_excerpt(query: str, result: str) -> tuple[str, str]:
+    """Pick the sentence from the first RAG hit that best matches the query."""
+    first_hit = result.split("\n\n[2]", 1)[0].strip()
+    lines = [line.strip() for line in first_hit.splitlines() if line.strip()]
+    if not lines:
+        return "", "the knowledge base"
+
+    header = lines[0]
+    source = "the knowledge base"
+    if header.startswith("[1] (") and header.endswith(")"):
+        source_meta = header[5:-1]
+        source = source_meta.rsplit(", similarity ", 1)[0]
+
+    content = " ".join(lines[1:])
+    sentences = [
+        sentence.strip()
+        for sentence in re.split(r"(?<=[.!?])\s+", content)
+        if sentence.strip()
+    ]
+    if not sentences:
+        return content[:420], source
+
+    query_terms = {
+        token
+        for token in re.findall(r"[a-z0-9]+", query.lower())
+        if token not in _QUERY_STOPWORDS
+    }
+
+    def relevance(sentence: str) -> tuple[int, int]:
+        sentence_terms = set(re.findall(r"[a-z0-9]+", sentence.lower()))
+        return len(query_terms & sentence_terms), -len(sentence)
+
+    best = max(sentences, key=relevance)
+    return best[:420], source
+
+
 def _final_text(query: str, sequence: list[str], last_result: str) -> str:
     lines: list[str] = []
     if "search_knowledge" in sequence and last_result:
-        excerpt = last_result.strip().replace("\n", " ")[:260]
+        excerpt, source = _grounded_excerpt(query, last_result)
         lines.append(
-            f"Here's what I found for **\"{query.strip()[:140]}\"**, grounded in the "
-            "agent's knowledge base:"
+            f"Here's the grounded answer to **\"{query.strip()[:140]}\"**:"
         )
         lines.append("")
-        lines.append(f"> {excerpt}…")
+        lines.append(excerpt or "The knowledge base did not contain a usable answer.")
         lines.append("")
-        lines.append(
-            "Based on those sources, my recommendation is to proceed with the "
-            "approach above. I've cited the retrieved material so you can verify "
-            "every claim."
-        )
+        lines.append(f"**Source:** {source}")
     else:
         lines.append(
             f"Here's my response to **\"{query.strip()[:140]}\"**. "

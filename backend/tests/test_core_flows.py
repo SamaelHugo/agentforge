@@ -70,6 +70,8 @@ def test_offline_react_stream_uses_knowledge_result_not_save_confirmation(
     assert event_types[-1] == "done"
     assert "Northwind Cloud" in final_text
     assert "How often do syncs run" in final_text
+    assert "every 6 hours" in final_text
+    assert "proceed with the approach above" not in final_text
     assert not final_text.lstrip().startswith("> Saved")
 
 
